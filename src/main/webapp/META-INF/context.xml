@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- SameSite=Lax en la cookie de sesión, como defensa adicional frente a CSRF. -->
+<Context>
+    <CookieProcessor sameSiteCookies="lax"/>
+    <!-- Tras un reverse proxy (nginx, Traefik...), honra X-Forwarded-For y X-Forwarded-Proto
+         de proxies internos (rangos privados por defecto) para que la IP remota, el esquema
+         y request.isSecure() reflejen la petición original. -->
+    <Valve className="org.apache.catalina.valves.RemoteIpValve"
+           protocolHeader="X-Forwarded-Proto"/>
+</Context>

@@ -1,0 +1,16 @@
+/* Deja espacio bajo la barra de navegación fija de Bootstrap 5. */
+body {
+    padding-top: 70px;
+    padding-bottom: 20px;
+}
+
+.body-content {
+    max-width: 960px;
+}
+
+/* Calificación por estrellas en la lista de respuestas. */
+.stars {
+    color: #f0ad4e;
+    letter-spacing: 2px;
+    white-space: nowrap;
+}

@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Exclusiones de SpotBugs: patrones que en esta aplicación son ruido, no defectos. -->
+<FindBugsFilter>
+    <!-- Getters/setters de entidades y del contenedor de servicios que exponen
+         referencias internas: es el diseño intencional de los POJOs y de App. -->
+    <Match>
+        <Bug pattern="EI_EXPOSE_REP"/>
+    </Match>
+    <Match>
+        <Bug pattern="EI_EXPOSE_REP2"/>
+    </Match>
+    <!-- Los servlets son Serializable por herencia; nunca se serializan en esta app. -->
+    <Match>
+        <Bug pattern="SE_NO_SERIALVERSIONID"/>
+    </Match>
+</FindBugsFilter>

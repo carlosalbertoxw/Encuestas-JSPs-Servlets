@@ -1,0 +1,41 @@
+<?xml version="1.0"?>
+<!DOCTYPE module PUBLIC
+        "-//Checkstyle//DTD Checkstyle Configuration 1.3//EN"
+        "https://checkstyle.org/dtds/configuration_1_3.dtd">
+<!-- Reglas de estilo y de errores comunes; el build falla si se violan. -->
+<module name="Checker">
+    <property name="charset" value="UTF-8"/>
+    <property name="severity" value="error"/>
+
+    <module name="FileTabCharacter"/>
+    <module name="NewlineAtEndOfFile">
+        <property name="lineSeparator" value="lf_cr_crlf"/>
+    </module>
+
+    <module name="TreeWalker">
+        <!-- Imports -->
+        <module name="UnusedImports"/>
+        <module name="RedundantImport"/>
+        <module name="AvoidStarImport"/>
+        <module name="IllegalImport"/>
+
+        <!-- Errores comunes -->
+        <module name="EqualsHashCode"/>
+        <module name="StringLiteralEquality"/>
+        <module name="SimplifyBooleanExpression"/>
+        <module name="SimplifyBooleanReturn"/>
+        <module name="EmptyBlock">
+            <property name="option" value="text"/>
+        </module>
+        <module name="DefaultComesLast"/>
+        <module name="FallThrough"/>
+        <module name="OneStatementPerLine"/>
+
+        <!-- Estilo -->
+        <module name="ModifierOrder"/>
+        <module name="RedundantModifier"/>
+        <module name="ArrayTypeStyle"/>
+        <module name="UpperEll"/>
+        <module name="OuterTypeFilename"/>
+    </module>
+</module>

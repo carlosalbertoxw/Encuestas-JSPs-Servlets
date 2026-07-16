@@ -1,0 +1,120 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<web-app xmlns="https://jakarta.ee/xml/ns/jakartaee"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="https://jakarta.ee/xml/ns/jakartaee https://jakarta.ee/xml/ns/jakartaee/web-app_6_0.xsd"
+         version="6.0">
+
+    <welcome-file-list>
+        <welcome-file>User</welcome-file>
+    </welcome-file-list>
+
+    <!-- Filtros: el orden de los filter-mapping define el orden de ejecución. -->
+    <filter>
+        <filter-name>EncodingFilter</filter-name>
+        <filter-class>encuestas.web.filter.EncodingFilter</filter-class>
+    </filter>
+    <filter>
+        <filter-name>SecurityHeadersFilter</filter-name>
+        <filter-class>encuestas.web.filter.SecurityHeadersFilter</filter-class>
+    </filter>
+    <filter>
+        <filter-name>SecurityStampFilter</filter-name>
+        <filter-class>encuestas.web.filter.SecurityStampFilter</filter-class>
+    </filter>
+    <filter>
+        <filter-name>AuthRateLimitFilter</filter-name>
+        <filter-class>encuestas.web.filter.AuthRateLimitFilter</filter-class>
+    </filter>
+    <filter>
+        <filter-name>CsrfFilter</filter-name>
+        <filter-class>encuestas.web.filter.CsrfFilter</filter-class>
+    </filter>
+
+    <filter-mapping>
+        <filter-name>EncodingFilter</filter-name>
+        <url-pattern>/*</url-pattern>
+    </filter-mapping>
+    <filter-mapping>
+        <filter-name>SecurityHeadersFilter</filter-name>
+        <url-pattern>/*</url-pattern>
+    </filter-mapping>
+    <filter-mapping>
+        <filter-name>SecurityStampFilter</filter-name>
+        <url-pattern>/*</url-pattern>
+    </filter-mapping>
+    <filter-mapping>
+        <filter-name>AuthRateLimitFilter</filter-name>
+        <url-pattern>/User</url-pattern>
+    </filter-mapping>
+    <filter-mapping>
+        <filter-name>CsrfFilter</filter-name>
+        <url-pattern>/User</url-pattern>
+    </filter-mapping>
+    <filter-mapping>
+        <filter-name>CsrfFilter</filter-name>
+        <url-pattern>/Poll</url-pattern>
+    </filter-mapping>
+    <filter-mapping>
+        <filter-name>CsrfFilter</filter-name>
+        <url-pattern>/Answer</url-pattern>
+    </filter-mapping>
+
+    <servlet>
+        <servlet-name>User</servlet-name>
+        <servlet-class>encuestas.web.UserServlet</servlet-class>
+    </servlet>
+    <servlet>
+        <servlet-name>Poll</servlet-name>
+        <servlet-class>encuestas.web.PollServlet</servlet-class>
+    </servlet>
+    <servlet>
+        <servlet-name>Answer</servlet-name>
+        <servlet-class>encuestas.web.AnswerServlet</servlet-class>
+    </servlet>
+    <servlet>
+        <servlet-name>Health</servlet-name>
+        <servlet-class>encuestas.web.HealthServlet</servlet-class>
+    </servlet>
+
+    <servlet-mapping>
+        <servlet-name>User</servlet-name>
+        <url-pattern>/User</url-pattern>
+    </servlet-mapping>
+    <servlet-mapping>
+        <servlet-name>Poll</servlet-name>
+        <url-pattern>/Poll</url-pattern>
+    </servlet-mapping>
+    <servlet-mapping>
+        <servlet-name>Answer</servlet-name>
+        <url-pattern>/Answer</url-pattern>
+    </servlet-mapping>
+    <servlet-mapping>
+        <servlet-name>Health</servlet-name>
+        <url-pattern>/health</url-pattern>
+    </servlet-mapping>
+
+    <error-page>
+        <error-code>404</error-code>
+        <location>/WEB-INF/views/error404.jsp</location>
+    </error-page>
+    <error-page>
+        <error-code>403</error-code>
+        <location>/WEB-INF/views/error.jsp</location>
+    </error-page>
+    <error-page>
+        <error-code>500</error-code>
+        <location>/WEB-INF/views/error.jsp</location>
+    </error-page>
+    <error-page>
+        <exception-type>java.lang.Throwable</exception-type>
+        <location>/WEB-INF/views/error.jsp</location>
+    </error-page>
+
+    <session-config>
+        <session-timeout>480</session-timeout>
+        <cookie-config>
+            <http-only>true</http-only>
+        </cookie-config>
+        <tracking-mode>COOKIE</tracking-mode>
+    </session-config>
+</web-app>

@@ -1,9 +1,19 @@
-#Archivos
-*.orig
+# Maven
+target/
 
-#Carpetas
-nbproject/private/
-build/
-nbbuild/
-dist/
-nbdist/
+# Eclipse
+.classpath
+.project
+.settings/
+
+# IntelliJ
+.idea/
+*.iml
+
+# Entorno local (credenciales de docker-compose)
+.env
+
+# Otros
+*.orig
+Thumbs.db
+.DS_Store
