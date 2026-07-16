@@ -1,5 +1,5 @@
 # Etapa 1: compilar el WAR con Maven.
-FROM maven:3.9-eclipse-temurin-17 AS build
+FROM maven:3-eclipse-temurin-26 AS build
 WORKDIR /source
 COPY pom.xml .
 # Descarga las dependencias primero para aprovechar la caché de capas de Docker.
