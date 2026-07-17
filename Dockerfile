@@ -1,5 +1,5 @@
 # Etapa 1: compilar el WAR con Maven.
-FROM maven:3.9-eclipse-temurin-17 AS build
+FROM maven:3-eclipse-temurin-26 AS build
 WORKDIR /source
 COPY pom.xml .
 # Descarga las dependencias primero para aprovechar la caché de capas de Docker.
@@ -7,8 +7,8 @@ RUN mvn -B -q dependency:go-offline
 COPY src ./src
 RUN mvn -B -q package -DskipTests
 
-# Etapa 2: imagen de ejecución con Tomcat 10.1 (Jakarta EE 10).
-FROM tomcat:10.1-jre17-temurin
+# Etapa 2: imagen de ejecución con Tomcat 11 (Jakarta EE 11).
+FROM tomcat:11.0-jre17-temurin
 # Compresión gzip en el conector HTTP (los tipos comprimibles por defecto ya incluyen
 # html, css, js y json). Se elimina el contenido por defecto y la app se despliega como
 # ROOT (contexto /).
