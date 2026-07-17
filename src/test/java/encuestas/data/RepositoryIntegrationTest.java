@@ -16,7 +16,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
-import org.testcontainers.containers.MySQLContainer;
+import org.testcontainers.mysql.MySQLContainer;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
 
@@ -29,7 +29,7 @@ import org.testcontainers.junit.jupiter.Testcontainers;
 class RepositoryIntegrationTest {
 
     @Container
-    private static final MySQLContainer<?> MYSQL = new MySQLContainer<>("mysql:8.4")
+    private static final MySQLContainer MYSQL = new MySQLContainer("mysql:8.4")
             .withDatabaseName("encuestas")
             .withUsername("encuestas")
             .withPassword("encuestas");
