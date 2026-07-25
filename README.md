@@ -98,7 +98,7 @@ src/main/resources/db/migration/   # Scripts SQL versionados
 src/main/webapp/
   WEB-INF/views/    # Vistas JSP (plantillas, públicas y de sesión)
   assets/           # Bootstrap 5.3, site.css, site.js (sin jQuery)
-src/test/java/      # Pruebas unitarias y de integración (JUnit 5 + Testcontainers)
+src/test/java/      # Pruebas unitarias (*Test) y de integración (*IT, Testcontainers)
 config/             # Reglas de Checkstyle y exclusiones de SpotBugs
 Dockerfile          # Imagen multi-stage de la app (usuario no root, gzip)
 docker-compose.yml  # Servicios web + MySQL 8.4 con volúmenes persistentes y healthcheck
@@ -110,7 +110,11 @@ docker-compose.yml  # Servicios web + MySQL 8.4 con volúmenes persistentes y he
 ./mvnw verify
 ```
 
-Hay pruebas unitarias de hashing de contraseñas (incluida la migración de hashes antiguos), tokens firmados (validez, caducidad, manipulación, rotación de claves), bloqueo de cuenta y validación, más pruebas de integración de los repositorios contra un MySQL 8.4 efímero (Testcontainers); estas últimas requieren Docker en ejecución y se omiten automáticamente si no está disponible. `verify` ejecuta además Checkstyle y SpotBugs y falla ante cualquier violación. En CI (GitHub Actions) todo esto corre en cada push y pull request.
+Las pruebas están separadas por costo: Surefire ejecuta las **unitarias** (`*Test`) en la fase `test` y Failsafe las de **integración** (`*IT`) en `integration-test`. Para el ciclo rápido de desarrollo basta `./mvnw test`, que no toca Docker; `./mvnw verify -DskipITs` añade el análisis estático sin levantar contenedores.
+
+Las unitarias cubren hashing de contraseñas (incluida la migración de hashes antiguos), tokens firmados (validez, caducidad, manipulación, rotación de claves), bloqueo de cuenta y validación. Las de integración ejercitan los repositorios contra un MySQL 8.4 efímero (Testcontainers): requieren Docker en ejecución y se omiten automáticamente si no está disponible. `verify` ejecuta además Checkstyle y SpotBugs y falla ante cualquier violación.
+
+En CI (GitHub Actions) esto corre en cada push y pull request como dos jobs paralelos sobre `ubuntu-latest`: uno con las unitarias y el análisis estático, y otro con las de integración.
 
 ## Base de datos
 

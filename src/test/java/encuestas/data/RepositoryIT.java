@@ -23,10 +23,11 @@ import org.testcontainers.junit.jupiter.Testcontainers;
 /**
  * Pruebas de integración de los repositorios contra un MySQL 8.4 real y efímero
  * (Testcontainers), con el esquema aplicado por las mismas migraciones que usa la
- * aplicación. Requieren Docker; sin él se omiten.
+ * aplicación. Las ejecuta Failsafe en la fase {@code integration-test} (sufijo
+ * {@code IT}, no {@code Test}); requieren Docker y sin él se omiten.
  */
 @Testcontainers(disabledWithoutDocker = true)
-class RepositoryIntegrationTest {
+class RepositoryIT {
 
     @Container
     private static final MySQLContainer MYSQL = new MySQLContainer("mysql:8.4")
