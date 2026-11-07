@@ -39,7 +39,7 @@ public final class AppConfig {
         Builder builder = new Builder();
         builder.development = "Development".equalsIgnoreCase(env("APP_ENV", "Development"));
         builder.dbHost = env("DB_HOST", "localhost");
-        builder.dbPort = Integer.parseInt(env("DB_PORT", "3306"));
+        builder.dbPort = parsePort("DB_PORT", "3306");
         builder.dbName = env("DB_NAME", "encuestas");
         builder.dbUser = env("DB_USER", "encuestas");
         builder.dbPassword = env("DB_PASSWORD", "encuestas");
@@ -47,11 +47,12 @@ public final class AppConfig {
         builder.tokenSecret = secret.isEmpty() ? null : secret.getBytes(StandardCharsets.UTF_8);
         builder.keysDir = env("APP_KEYS_DIR", System.getProperty("user.home") + "/.encuestas");
         builder.baseUrl = parseBaseUrl(env("APP_BASE_URL", builder.development ? "http://localhost:8080" : ""));
-        String smtpHost = env("SMTP_HOST", "");
+        // En Development, por defecto los correos van a Mailpit (localhost:1025, sin TLS).
+        String smtpHost = env("SMTP_HOST", builder.development ? "localhost" : "");
         builder.smtp = smtpHost.isEmpty() ? null : new SmtpSettings(
                 smtpHost,
-                Integer.parseInt(env("SMTP_PORT", "587")),
-                Boolean.parseBoolean(env("SMTP_STARTTLS", "true")),
+                parsePort("SMTP_PORT", builder.development ? "1025" : "587"),
+                Boolean.parseBoolean(env("SMTP_STARTTLS", builder.development ? "false" : "true")),
                 env("SMTP_USER", ""),
                 env("SMTP_PASSWORD", ""),
                 env("SMTP_FROM", "Encuestas <no-reply@encuestas.local>"));
@@ -73,6 +74,20 @@ public final class AppConfig {
         } catch (URISyntaxException e) {
             throw new IllegalStateException("Falta APP_BASE_URL, la URL pública de la aplicación "
                     + "(p. ej. https://encuestas.example.com)", e);
+        }
+    }
+
+    /** Lee un puerto TCP; un valor no numérico o fuera de rango detiene el arranque con un mensaje claro. */
+    static int parsePort(String name, String defaultValue) {
+        String value = env(name, defaultValue);
+        try {
+            int port = Integer.parseInt(value);
+            if (port < 1 || port > 65_535) {
+                throw new NumberFormatException(value);
+            }
+            return port;
+        } catch (NumberFormatException e) {
+            throw new IllegalStateException(name + " debe ser un puerto válido (1-65535): " + value, e);
         }
     }
 

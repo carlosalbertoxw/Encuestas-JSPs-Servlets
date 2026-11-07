@@ -42,7 +42,8 @@ public class AuthService {
 
     public LoginResult login(HttpServletRequest request, String email, String password) {
         if (lockout.isLocked(email)) {
-            LOGGER.log(Level.WARNING, "Inicio de sesión bloqueado por exceso de intentos para {0}", LogRedaction.email(email));
+            LOGGER.log(Level.WARNING, "Inicio de sesión bloqueado por exceso de intentos desde {0}",
+                    request.getRemoteAddr());
             return LoginResult.LOCKED_OUT;
         }
 
@@ -53,8 +54,9 @@ public class AuthService {
 
         if (outcome == PasswordService.Outcome.FAILED) {
             lockout.recordFailure(email);
-            LOGGER.log(Level.WARNING, "Intento de inicio de sesión fallido para {0} desde {1}",
-                    new Object[]{LogRedaction.email(email), request.getRemoteAddr()});
+            // El correo no se registra: es un dato personal y lo escribe quien intenta entrar.
+            LOGGER.log(Level.WARNING, "Intento de inicio de sesión fallido (usuario {0}) desde {1}",
+                    new Object[]{profile == null ? "-" : profile.getUser().getId(), request.getRemoteAddr()});
             return LoginResult.INVALID_CREDENTIALS;
         }
 

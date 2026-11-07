@@ -7,7 +7,6 @@ import encuestas.data.UserRepository;
 import encuestas.service.AccountLockout;
 import encuestas.service.AuthService;
 import encuestas.service.EmailSender;
-import encuestas.service.LoggingEmailSender;
 import encuestas.service.PasswordService;
 import encuestas.service.RateLimiter;
 import encuestas.service.SecurityStampCache;
@@ -62,17 +61,14 @@ public final class App {
     }
 
     /**
-     * SMTP si está configurado; si no, en Development los correos se escriben en el log. En
-     * cualquier otro entorno es un error de configuración.
+     * Los correos siempre salen por SMTP (en Development, a Mailpit por defecto); nunca se
+     * escriben en el log, porque llevan enlaces con tokens.
      */
     private static EmailSender createEmailSender(AppConfig config) {
-        if (config.getSmtp() != null) {
-            return new SmtpEmailSender(config.getSmtp());
+        if (config.getSmtp() == null) {
+            throw new IllegalStateException("Falta SMTP_HOST para enviar los correos");
         }
-        if (config.isDevelopment()) {
-            return new LoggingEmailSender();
-        }
-        throw new IllegalStateException("Falta SMTP_HOST para enviar los correos");
+        return new SmtpEmailSender(config.getSmtp());
     }
 
     static App start(AppConfig config) {

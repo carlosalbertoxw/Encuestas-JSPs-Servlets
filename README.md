@@ -16,7 +16,7 @@ Aplicación web de encuestas escrita en Java 25 (JSPs y Servlets, Jakarta EE 11 
 - Perfil público por nombre de usuario (`/User?profile=usuario`).
 - Respuestas: calificación de 1 a 5 estrellas y comentario, **una por usuario y encuesta**.
 - Protección CSRF (token sincronizado en todos los POST), validación en servidor y en cliente (sin jQuery); los formularios rechazados conservan los valores no sensibles.
-- Límite de peticiones por IP en login/registro más **bloqueo por cuenta**; cabeceras de seguridad (CSP sin scripts en línea y HSTS sobre HTTPS fuera de Development) y logs sin correos en claro.
+- Límite de peticiones por IP en login/registro más **bloqueo por cuenta**; cabeceras de seguridad (CSP sin scripts en línea y HSTS sobre HTTPS fuera de Development) y logs sin correos ni enlaces con tokens.
 - Logs en **JSON** fuera de Development, con un identificador por petición (cabecera `X-Request-Id`).
 - Cookie de sesión `HttpOnly` + `SameSite=Lax`, y `Secure` fuera de Development; soporte para reverse proxy (`X-Forwarded-For`/`X-Forwarded-Proto` vía RemoteIpValve).
 - Migraciones de esquema versionadas que se **descubren solas** y se aplican al arrancar (tabla `schemaversions`).
@@ -52,7 +52,7 @@ docker compose up -d db mailpit
 ./mvnw package
 ```
 
-Despliega `target/encuestas.war` en un Tomcat 11 (por ejemplo desde Eclipse o IntelliJ con un servidor configurado). Al arrancar se aplican las migraciones y, en el entorno Development (el valor por defecto de `APP_ENV`), se insertan los datos de demostración. Para recibir los correos en Mailpit define `SMTP_HOST=localhost`, `SMTP_PORT=1025` y `SMTP_STARTTLS=false`; sin SMTP, en Development los correos se escriben en el log.
+Despliega `target/encuestas.war` en un Tomcat 11 (por ejemplo desde Eclipse o IntelliJ con un servidor configurado). Al arrancar se aplican las migraciones y, en el entorno Development (el valor por defecto de `APP_ENV`), se insertan los datos de demostración. En Development los correos van por defecto a Mailpit (`localhost:1025`, sin TLS); la app no escribe los correos en el log porque llevan enlaces con tokens.
 
 ### Usuarios de demostración
 
@@ -76,8 +76,8 @@ La aplicación se configura con variables de entorno (o propiedades del sistema 
 | `DB_PASSWORD`      | Contraseña del usuario                                          | `encuestas`   |
 | `APP_ENV`          | `Development` (datos demo) o `Production`                       | `Development` |
 | `APP_BASE_URL`     | URL pública; base de los enlaces de los correos. **Obligatoria** fuera de Development | `http://localhost:8080` en Development |
-| `SMTP_HOST`        | Servidor SMTP. **Obligatorio** fuera de Development             | *(vacío)*     |
-| `SMTP_PORT`, `SMTP_STARTTLS` | Puerto y uso de STARTTLS                              | `587`, `true` |
+| `SMTP_HOST`        | Servidor SMTP. **Obligatorio** fuera de Development             | `localhost` (Mailpit) en Development |
+| `SMTP_PORT`, `SMTP_STARTTLS` | Puerto y uso de STARTTLS                              | `587`, `true` (`1025`, `false` en Development) |
 | `SMTP_USER`, `SMTP_PASSWORD`, `SMTP_FROM` | Credenciales y remitente                 | *(vacío)*, *(vacío)*, `Encuestas <no-reply@encuestas.local>` |
 | `APP_TOKEN_SECRET` | Secreto fijo para firmar los tokens de correo (opcional)        | *(vacío)*     |
 | `APP_KEYS_DIR`     | Directorio de las claves de firma generadas por la app          | `~/.encuestas` |
@@ -93,7 +93,7 @@ src/main/java/encuestas/
   model/            # Entidades: User, UserProfile, Poll, Answer
   data/             # Pool de conexiones y repositorios JDBC (RepositoryResult, PagedResult)
   service/          # PasswordService, TokenService, AuthService, AccountLockout, RateLimiter,
-                    # SecurityStampCache, correo (SMTP / log), Validation, Messages, LogRedaction
+                    # SecurityStampCache, SmtpEmailSender, Validation, Messages
   infrastructure/   # AppConfig, App, AppInitializer, MigrationRunner, DevDataSeeder, JsonLogFormatter
   web/              # Servlets (User: inicio y acceso; Account: gestión de la cuenta; Poll, Answer,
                     # Health) y filtros (request id, CSRF, cabeceras, sello de seguridad, rate limit)
@@ -116,7 +116,7 @@ docker-compose.yml  # web + MySQL 8.4 + Mailpit, con volúmenes persistentes
 
 Las pruebas están separadas por costo: Surefire ejecuta las **unitarias** (`*Test`) en la fase `test` y Failsafe las de **integración** (`*IT`) en `integration-test`. Para el ciclo rápido basta `./mvnw test`, que no toca Docker; `./mvnw verify -DskipITs` añade el análisis estático sin levantar contenedores, y `./mvnw verify -DskipUTs` ejecuta solo las de integración.
 
-Las unitarias cubren hashing de contraseñas (incluida la migración de hashes antiguos), tokens firmados (confirmación, cambio de correo y restablecimiento: validez, caducidad, manipulación, rotación de claves), bloqueo de cuenta, validación, configuración de la URL pública, descubrimiento de migraciones, logs JSON y enmascarado de correos. Las de integración ejercitan los repositorios contra un MySQL 8.4 efímero (Testcontainers), incluidos la paginación y el flujo del correo pendiente; requieren Docker en ejecución y se omiten automáticamente si no está disponible. `verify` ejecuta además Checkstyle y SpotBugs y falla ante cualquier violación.
+Las unitarias cubren hashing de contraseñas (incluida la migración de hashes antiguos), tokens firmados (confirmación, cambio de correo y restablecimiento: validez, caducidad, manipulación, rotación de claves), bloqueo de cuenta, validación, configuración de la URL pública, validación de puertos, descubrimiento de migraciones y logs JSON. Las de integración ejercitan los repositorios contra un MySQL 8.4 efímero (Testcontainers), incluidos la paginación y el flujo del correo pendiente; requieren Docker en ejecución y se omiten automáticamente si no está disponible. `verify` ejecuta además Checkstyle y SpotBugs y falla ante cualquier violación.
 
 ## Integración continua
 

@@ -57,7 +57,7 @@ public class UserServlet extends BaseServlet {
             if (page.isEmpty()) {
                 forward(request, response, "public/home.jsp", "Inicio");
             } else {
-                notFound(request, response);
+                notFound(response);
             }
             return;
         }
@@ -67,7 +67,7 @@ public class UserServlet extends BaseServlet {
         } else if (page.isEmpty()) {
             redirect(request, response, "/Poll?page=dashboard");
         } else {
-            notFound(request, response);
+            notFound(response);
         }
     }
 
@@ -96,7 +96,7 @@ public class UserServlet extends BaseServlet {
             throws ServletException, IOException {
         UserProfile userProfile = profile.length() > 25 ? null : App.get().getUsers().getProfileByUserName(profile);
         if (userProfile == null) {
-            notFound(request, response);
+            notFound(response);
             return;
         }
         request.setAttribute("result", App.get().getPolls().getPolls(userProfile.getUser().getId(),

@@ -20,6 +20,19 @@ class InfrastructureTest {
     }
 
     @Test
+    void portsMustBeValidNumbers() {
+        assertEquals(3306, AppConfig.parsePort("ENCUESTAS_TEST_PORT_UNSET", "3306"));
+        System.setProperty("ENCUESTAS_TEST_PORT", "no-es-numero");
+        try {
+            assertThrows(IllegalStateException.class, () -> AppConfig.parsePort("ENCUESTAS_TEST_PORT", "3306"));
+            System.setProperty("ENCUESTAS_TEST_PORT", "70000");
+            assertThrows(IllegalStateException.class, () -> AppConfig.parsePort("ENCUESTAS_TEST_PORT", "3306"));
+        } finally {
+            System.clearProperty("ENCUESTAS_TEST_PORT");
+        }
+    }
+
+    @Test
     void migrationsAreDiscoveredInOrder() {
         List<String> scripts = MigrationRunner.discoverScripts();
         assertEquals("V0001__esquema_inicial.sql", scripts.get(0));

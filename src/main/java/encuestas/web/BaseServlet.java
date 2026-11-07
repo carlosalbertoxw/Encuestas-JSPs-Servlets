@@ -78,7 +78,7 @@ public abstract class BaseServlet extends HttpServlet {
         response.sendRedirect(request.getContextPath() + path);
     }
 
-    protected void notFound(HttpServletRequest request, HttpServletResponse response)
+    protected void notFound(HttpServletResponse response)
             throws IOException {
         response.sendError(HttpServletResponse.SC_NOT_FOUND);
     }

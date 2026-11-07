@@ -34,7 +34,7 @@ public class PollServlet extends BaseServlet {
                 forward(request, response, "session/pollForm.jsp", "Agregar encuesta");
             }
             case "edit" -> edit(request, response);
-            default -> notFound(request, response);
+            default -> notFound(response);
         }
     }
 
@@ -66,7 +66,7 @@ public class PollServlet extends BaseServlet {
         Integer id = Validation.parseInt(request.getParameter("id"));
         Poll poll = id == null ? null : App.get().getPolls().getPoll(AuthService.currentUserId(request), id);
         if (poll == null) {
-            notFound(request, response);
+            notFound(response);
             return;
         }
         request.setAttribute("poll", poll);

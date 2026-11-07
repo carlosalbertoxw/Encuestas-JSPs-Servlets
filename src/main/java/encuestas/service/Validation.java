@@ -15,7 +15,9 @@ public final class Validation {
 
     /** Longitud máxima de una dirección de correo válida. */
     public static final int EMAIL_MAX = 254;
-    private static final Pattern EMAIL = Pattern.compile("^[^@\\s]+@[^@\\s]+\\.[^@\\s]+$");
+    // Dominio como etiquetas separadas por puntos: sin cuantificadores ambiguos, así una entrada
+    // maliciosa no dispara retroceso exponencial (ReDoS).
+    private static final Pattern EMAIL = Pattern.compile("^[^@\\s]+@[^@\\s.]+(?:\\.[^@\\s.]+)+$");
     private static final Pattern USER_NAME = Pattern.compile("^[0-9a-zA-Z-]+$");
 
     public static boolean isEmail(String value) {

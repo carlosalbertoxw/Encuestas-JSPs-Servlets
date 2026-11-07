@@ -14,6 +14,10 @@ class ValidationTest {
         assertTrue(Validation.isEmail("demo@encuestas.dev"));
         assertFalse(Validation.isEmail("sin-arroba"));
         assertFalse(Validation.isEmail("a@b"));
+        assertFalse(Validation.isEmail("a@b..dev"));
+        assertTrue(Validation.isEmail("ana@correo.encuestas.dev"));
+        // Entrada de ReDoS: debe resolverse al instante.
+        assertFalse(Validation.isEmail("!@!." + "!.".repeat(120)));
         assertFalse(Validation.isEmail(""));
         assertFalse(Validation.isEmail(null));
         assertTrue(Validation.isEmail("a".repeat(60) + "@x.com"));

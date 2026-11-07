@@ -28,7 +28,7 @@ public class AnswerServlet extends BaseServlet {
         switch (param(request, "page")) {
             case "add" -> addForm(request, response);
             case "answers" -> answers(request, response);
-            default -> notFound(request, response);
+            default -> notFound(response);
         }
     }
 
@@ -52,7 +52,7 @@ public class AnswerServlet extends BaseServlet {
         Integer id = Validation.parseInt(request.getParameter("id"));
         Poll poll = id == null ? null : App.get().getPolls().getPollById(id);
         if (poll == null) {
-            notFound(request, response);
+            notFound(response);
             return;
         }
         request.setAttribute("poll", poll);
@@ -63,7 +63,7 @@ public class AnswerServlet extends BaseServlet {
         Integer id = Validation.parseInt(request.getParameter("id"));
         Poll poll = id == null ? null : App.get().getPolls().getPollById(id);
         if (poll == null) {
-            notFound(request, response);
+            notFound(response);
             return;
         }
         Integer stars = Validation.parseInt(request.getParameter("stars"));
@@ -92,7 +92,7 @@ public class AnswerServlet extends BaseServlet {
         Integer id = Validation.parseInt(request.getParameter("id"));
         Poll poll = id == null ? null : App.get().getPolls().getPoll(AuthService.currentUserId(request), id);
         if (poll == null) {
-            notFound(request, response);
+            notFound(response);
             return;
         }
         request.setAttribute("pollId", id);

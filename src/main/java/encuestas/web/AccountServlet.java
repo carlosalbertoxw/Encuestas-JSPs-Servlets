@@ -42,7 +42,7 @@ public class AccountServlet extends BaseServlet {
             case "change-email" -> forward(request, response, "session/changeEmail.jsp", "Cambiar correo electrónico");
             case "change-password" -> forward(request, response, "session/changePassword.jsp", "Cambiar contraseña");
             case "delete-account" -> forward(request, response, "session/deleteAccount.jsp", "Borrar cuenta");
-            default -> notFound(request, response);
+            default -> notFound(response);
         }
     }
 
