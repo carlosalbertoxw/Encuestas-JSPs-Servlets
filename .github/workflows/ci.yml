@@ -2,7 +2,11 @@ name: CI
 
 on:
   push:
+    branches: [master]
   pull_request:
+
+permissions:
+  contents: read
 
 jobs:
   # Rápido y sin Docker: da señal de lógica rota en menos de un minuto.
@@ -11,27 +15,54 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
-      - name: Configurar JDK 17
-        uses: actions/setup-java@v5
+      - name: Configurar JDK 25
+        uses: actions/setup-java@v6
         with:
           distribution: temurin
-          java-version: '17'
+          java-version: '25'
           cache: maven
       - name: Compilar, probar y analizar
-        run: mvn -B verify -DskipITs
+        run: ./mvnw -B verify -DskipITs
 
   # Lento: levanta un MySQL 8.4 con Testcontainers (Docker viene en el runner).
-  # Checkstyle y SpotBugs ya corrieron en el otro job, no se repiten aquí.
+  # Las unitarias, Checkstyle y SpotBugs ya corrieron en el otro job, no se repiten aquí.
   pruebas-integracion:
     name: Pruebas de integración
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
-      - name: Configurar JDK 17
-        uses: actions/setup-java@v5
+      - name: Configurar JDK 25
+        uses: actions/setup-java@v6
         with:
           distribution: temurin
-          java-version: '17'
+          java-version: '25'
           cache: maven
       - name: Probar contra MySQL efímero
-        run: mvn -B verify -Dcheckstyle.skip -Dspotbugs.skip
+        run: ./mvnw -B verify -DskipUTs -Dcheckstyle.skip -Dspotbugs.skip
+
+  # Construye la imagen de producción y la escanea: incluye Tomcat, el JRE y los JAR del WAR.
+  imagen:
+    name: Imagen Docker
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - name: Construir la imagen
+        run: docker build -t encuestas-jsp:${{ github.sha }} .
+      - name: Escanear la imagen (Trivy)
+        uses: aquasecurity/trivy-action@v0.36.0
+        with:
+          image-ref: encuestas-jsp:${{ github.sha }}
+          severity: CRITICAL,HIGH
+          ignore-unfixed: true
+          exit-code: '1'
+
+  # En los pull requests, rechaza dependencias nuevas o actualizadas con vulnerabilidades conocidas.
+  revision-dependencias:
+    name: Revisión de dependencias
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/dependency-review-action@v5.0.0
+        with:
+          fail-on-severity: moderate

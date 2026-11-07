@@ -20,6 +20,15 @@ services:
       timeout: 5s
       retries: 10
 
+  # Servidor SMTP de pruebas: captura todos los correos y los muestra en http://localhost:8025.
+  mailpit:
+    image: axllent/mailpit:v1.33
+    container_name: encuestas-jsp-mailpit
+    restart: unless-stopped
+    ports:
+      - "${MAILPIT_SMTP_PORT:-1025}:1025"
+      - "${MAILPIT_UI_PORT:-8025}:8025"
+
   web:
     build:
       context: .
@@ -29,6 +38,8 @@ services:
     depends_on:
       db:
         condition: service_healthy
+      mailpit:
+        condition: service_started
     environment:
       # La app se conecta al contenedor de MySQL por el nombre del servicio (db).
       DB_HOST: db
@@ -37,6 +48,11 @@ services:
       DB_USER: ${MYSQL_USER:-encuestas}
       DB_PASSWORD: ${MYSQL_PASSWORD:-encuestas}
       APP_ENV: Production
+      # URL pública con la que se construyen los enlaces de los correos.
+      APP_BASE_URL: ${APP_BASE_URL:-http://localhost:8080}
+      SMTP_HOST: mailpit
+      SMTP_PORT: "1025"
+      SMTP_STARTTLS: "false"
       # Con APP_TOKEN_SECRET vacío, la app genera y rota sus claves de firma en
       # APP_KEYS_DIR (persistido en el volumen web-keys).
       APP_TOKEN_SECRET: ${APP_TOKEN_SECRET:-}
@@ -45,7 +61,7 @@ services:
       - "${WEB_PORT:-8080}:8080"
     volumes:
       - web-keys:/var/lib/encuestas
-    # Orquestadores (K8s, etc.) pueden usar la ruta HTTP /health como sonda de readiness/liveness.
+    # El HEALTHCHECK de la imagen consulta /health/live; /health/ready comprueba además la BD.
 
 volumes:
   db-data:
