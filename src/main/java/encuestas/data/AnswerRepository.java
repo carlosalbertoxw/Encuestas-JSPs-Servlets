@@ -26,12 +26,8 @@ public class AnswerRepository {
     }
 
     public PagedResult<Answer> getAnswersForPoll(int pollId, int page, int pageSize) {
-        if (page < 1) {
-            page = 1;
-        }
-        if (pageSize < 1) {
-            pageSize = 10;
-        }
+        page = PagedResult.normalizePage(page);
+        pageSize = PagedResult.normalizePageSize(pageSize);
         List<Answer> answers = new ArrayList<>();
         long total = 0;
         try (Connection connection = dataSource.getConnection()) {

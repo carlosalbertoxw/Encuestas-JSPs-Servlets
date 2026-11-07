@@ -20,7 +20,7 @@ public class UserRepository {
     private static final Logger LOGGER = Logger.getLogger(UserRepository.class.getName());
 
     private static final String USER_COLUMNS =
-            "u.u_key, u.u_email, u.u_email_confirmed, u.u_password, u.u_security_stamp";
+            "u.u_key, u.u_email, u.u_email_confirmed, u.u_pending_email, u.u_password, u.u_security_stamp";
 
     private final DataSource dataSource;
 
@@ -105,6 +105,10 @@ public class UserRepository {
         return executeUpdate("UPDATE a_users SET u_email_confirmed=1 WHERE u_key=?", id);
     }
 
+    public UserProfile getProfileById(int id) {
+        return queryProfile("WHERE u.u_key=?", String.valueOf(id));
+    }
+
     public UserProfile getProfileByEmail(String email) {
         return queryProfile("WHERE u.u_email=?", email);
     }
@@ -121,8 +125,23 @@ public class UserRepository {
         return executeUpdate("UPDATE a_users_profiles SET u_p_user_name=? WHERE u_p_key=?", id, userName);
     }
 
-    public RepositoryResult updateEmail(int id, String email) {
-        return executeUpdate("UPDATE a_users SET u_email=? WHERE u_key=?", id, email);
+    /**
+     * Guarda el correo nuevo como pendiente; la cuenta sigue usando el actual hasta que se
+     * confirma con {@link #confirmEmailChange}.
+     */
+    public RepositoryResult setPendingEmail(int id, String email) {
+        return executeUpdate("UPDATE a_users SET u_pending_email=? WHERE u_key=?", id, email);
+    }
+
+    /**
+     * Aplica el correo pendiente si sigue siendo {@code email} y rota el sello para cerrar las
+     * demás sesiones. DUPLICATE si otra cuenta ya usa ese correo; NOT_FOUND si el cambio
+     * pendiente ya no coincide.
+     */
+    public RepositoryResult confirmEmailChange(int id, String email, String newSecurityStamp) {
+        return executeUpdate("UPDATE a_users SET u_email=u_pending_email, u_pending_email=NULL, "
+                + "u_email_confirmed=1, u_security_stamp=? WHERE u_pending_email=? AND u_key=?",
+                id, newSecurityStamp, email);
     }
 
     /** Actualiza solo el hash (rehash transparente); no rota el sello de seguridad. */
@@ -182,6 +201,7 @@ public class UserRepository {
         user.setId(rs.getInt("u_key"));
         user.setEmail(rs.getString("u_email"));
         user.setEmailConfirmed(rs.getBoolean("u_email_confirmed"));
+        user.setPendingEmail(rs.getString("u_pending_email"));
         user.setPasswordHash(rs.getString("u_password"));
         user.setSecurityStamp(rs.getString("u_security_stamp"));
         return user;

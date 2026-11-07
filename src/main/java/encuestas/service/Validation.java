@@ -13,11 +13,13 @@ public final class Validation {
     public static final int PASSWORD_MIN = 6;
     public static final int PASSWORD_MAX = 50;
 
+    /** Longitud máxima de una dirección de correo válida. */
+    public static final int EMAIL_MAX = 254;
     private static final Pattern EMAIL = Pattern.compile("^[^@\\s]+@[^@\\s]+\\.[^@\\s]+$");
     private static final Pattern USER_NAME = Pattern.compile("^[0-9a-zA-Z-]+$");
 
     public static boolean isEmail(String value) {
-        return value != null && !value.isEmpty() && value.length() <= 50 && EMAIL.matcher(value).matches();
+        return value != null && !value.isEmpty() && value.length() <= EMAIL_MAX && EMAIL.matcher(value).matches();
     }
 
     /** Sin longitud mínima: cuentas antiguas podrían tener contraseñas más cortas que la política actual. */

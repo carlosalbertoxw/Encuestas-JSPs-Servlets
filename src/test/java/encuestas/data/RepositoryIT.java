@@ -73,7 +73,8 @@ class RepositoryIT {
         poll.setPosition(1);
         poll.setUserId(userId);
         assertTrue(polls.addPoll(poll));
-        return polls.getPolls(userId).get(polls.getPolls(userId).size() - 1);
+        java.util.List<Poll> items = polls.getPolls(userId, 1, 100).getItems();
+        return items.get(items.size() - 1);
     }
 
     @Test
@@ -187,5 +188,53 @@ class RepositoryIT {
         assertNull(users.getUser(owner.getUser().getId()));
         assertNull(polls.getPollById(poll.getId()));
         assertEquals(0, answers.getAnswersForPoll(poll.getId(), 1, 10).getTotalCount());
+    }
+
+    @Test
+    void pollsArePaginatedByPosition() {
+        int userId = newUser().getUser().getId();
+        for (int position = 12; position >= 1; position--) {
+            Poll poll = new Poll();
+            poll.setTitle("t" + position);
+            poll.setDescription("d");
+            poll.setPosition(position);
+            poll.setUserId(userId);
+            assertTrue(polls.addPoll(poll));
+        }
+
+        PagedResult<Poll> second = polls.getPolls(userId, 2, 10);
+
+        assertEquals(12, second.getTotalCount());
+        assertEquals(java.util.List.of(11, 12), second.getItems().stream().map(Poll::getPosition).toList());
+    }
+
+    @Test
+    void pendingEmailIsOnlyAppliedWhenConfirmed() {
+        UserProfile profile = newUser();
+        int userId = profile.getUser().getId();
+        String oldEmail = profile.getUser().getEmail();
+        String newEmail = "nuevo" + SEQUENCE.incrementAndGet() + "@pruebas.dev";
+
+        assertEquals(RepositoryResult.SUCCESS, users.setPendingEmail(userId, newEmail));
+        assertEquals(oldEmail, users.getUser(userId).getEmail());
+        assertEquals(newEmail, users.getUser(userId).getPendingEmail());
+
+        // Un enlace para otra dirección (p. ej. de una solicitud anterior) no aplica nada.
+        assertEquals(RepositoryResult.NOT_FOUND, users.confirmEmailChange(userId, "otro@pruebas.dev", "sello-2"));
+        assertEquals(RepositoryResult.SUCCESS, users.confirmEmailChange(userId, newEmail, "sello-2"));
+
+        assertEquals(newEmail, users.getUser(userId).getEmail());
+        assertNull(users.getUser(userId).getPendingEmail());
+        assertTrue(users.getUser(userId).isEmailConfirmed());
+        assertEquals("sello-2", users.getSecurityStamp(userId));
+    }
+
+    @Test
+    void confirmingAnEmailUsedByAnotherAccountReturnsDuplicate() {
+        String taken = newUser().getUser().getEmail();
+        int userId = newUser().getUser().getId();
+        users.setPendingEmail(userId, taken);
+
+        assertEquals(RepositoryResult.DUPLICATE, users.confirmEmailChange(userId, taken, "s2"));
     }
 }

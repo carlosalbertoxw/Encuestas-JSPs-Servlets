@@ -1,5 +1,6 @@
 package encuestas.web;
 
+import encuestas.data.PagedResult;
 import encuestas.infrastructure.App;
 import encuestas.model.Answer;
 import encuestas.model.Poll;
@@ -16,8 +17,6 @@ import java.io.IOException;
  * listado paginado de respuestas recibidas, visible solo para el dueño de la encuesta.
  */
 public class AnswerServlet extends BaseServlet {
-
-    private static final int PAGE_SIZE = 10;
 
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
@@ -96,10 +95,9 @@ public class AnswerServlet extends BaseServlet {
             notFound(request, response);
             return;
         }
-        Integer page = Validation.parseInt(request.getParameter("p"));
         request.setAttribute("pollId", id);
         request.setAttribute("result",
-                App.get().getAnswers().getAnswersForPoll(id, page == null ? 1 : page, PAGE_SIZE));
+                App.get().getAnswers().getAnswersForPoll(id, pageNumber(request), PagedResult.DEFAULT_PAGE_SIZE));
         forward(request, response, "session/answers.jsp", "Respuestas: " + poll.getTitle());
     }
 }

@@ -4,9 +4,8 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 /**
- * Implementación por defecto que registra el correo en el log en lugar de enviarlo.
- * Sirve para desarrollo y pruebas; en producción debe sustituirse por un proveedor
- * real (SMTP, SendGrid…).
+ * Escribe el correo en el log en lugar de enviarlo. Solo se usa en Development cuando no hay
+ * SMTP configurado; el cuerpo incluye enlaces con tokens.
  */
 public class LoggingEmailSender implements EmailSender {
 

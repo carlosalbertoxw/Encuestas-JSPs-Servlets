@@ -5,10 +5,10 @@
 <div class="mt-3">
     <%@ include file="/WEB-INF/views/template/message.jsp" %>
     <h4 class="text-center mb-3"><c:out value="${title}"/></h4>
-    <c:if test="${empty polls}">
+    <c:if test="${result.totalCount == 0}">
         <p class="text-center text-secondary">Aún no tienes encuestas. Usa «Agregar encuesta» para crear la primera.</p>
     </c:if>
-    <c:forEach items="${polls}" var="item">
+    <c:forEach items="${result.items}" var="item">
         <div class="card mb-3">
             <div class="card-body">
                 <h5 class="card-title"><c:out value="${item.title}"/></h5>
@@ -31,5 +31,8 @@
             </div>
         </div>
     </c:forEach>
+    <jsp:include page="/WEB-INF/views/template/pager.jsp">
+        <jsp:param name="baseUrl" value="${pageContext.request.contextPath}/Poll?page=dashboard"/>
+    </jsp:include>
 </div>
 <%@ include file="/WEB-INF/views/template/scripts.jsp" %>

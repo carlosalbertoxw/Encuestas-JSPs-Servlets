@@ -9,7 +9,7 @@
         <div class="card">
             <div class="card-body">
                 <p class="text-danger">Esta acción es permanente: se eliminarán tu perfil, tus encuestas y sus respuestas.</p>
-                <form action="${pageContext.request.contextPath}/User" method="post"
+                <form action="${pageContext.request.contextPath}/Account" method="post"
                       data-confirm="¿Estás seguro de borrar tu cuenta? Esta acción no se puede deshacer.">
                     <input type="hidden" name="form" value="delete-account">
                     <input type="hidden" name="_csrf" value="${sessionScope.csrf_token}">

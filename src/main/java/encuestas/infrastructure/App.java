@@ -11,6 +11,7 @@ import encuestas.service.LoggingEmailSender;
 import encuestas.service.PasswordService;
 import encuestas.service.RateLimiter;
 import encuestas.service.SecurityStampCache;
+import encuestas.service.SmtpEmailSender;
 import encuestas.service.TokenKeyStore;
 import encuestas.service.TokenService;
 import java.nio.file.Path;
@@ -57,7 +58,21 @@ public final class App {
         this.authRateLimiter = new RateLimiter(10, Duration.ofMinutes(1));
         this.stampCache = new SecurityStampCache();
         this.auth = new AuthService(users, passwords, lockout);
-        this.email = new LoggingEmailSender();
+        this.email = createEmailSender(config);
+    }
+
+    /**
+     * SMTP si está configurado; si no, en Development los correos se escriben en el log. En
+     * cualquier otro entorno es un error de configuración.
+     */
+    private static EmailSender createEmailSender(AppConfig config) {
+        if (config.getSmtp() != null) {
+            return new SmtpEmailSender(config.getSmtp());
+        }
+        if (config.isDevelopment()) {
+            return new LoggingEmailSender();
+        }
+        throw new IllegalStateException("Falta SMTP_HOST para enviar los correos");
     }
 
     static App start(AppConfig config) {

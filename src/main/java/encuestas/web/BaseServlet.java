@@ -1,5 +1,7 @@
 package encuestas.web;
 
+import encuestas.infrastructure.App;
+import encuestas.service.Validation;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
@@ -81,17 +83,22 @@ public abstract class BaseServlet extends HttpServlet {
         response.sendError(HttpServletResponse.SC_NOT_FOUND);
     }
 
+    /** Número de página del parámetro {@code p} (1 si falta o no es válido). */
+    protected int pageNumber(HttpServletRequest request) {
+        Integer page = Validation.parseInt(request.getParameter("p"));
+        return page == null ? 1 : page;
+    }
+
     protected String param(HttpServletRequest request, String name) {
         String value = request.getParameter(name);
         return value != null ? value : "";
     }
 
-    /** URL absoluta de la aplicación para construir los enlaces de los correos. */
-    protected String baseUrl(HttpServletRequest request) {
-        String scheme = request.getScheme();
-        int port = request.getServerPort();
-        boolean defaultPort = ("http".equals(scheme) && port == 80) || ("https".equals(scheme) && port == 443);
-        return scheme + "://" + request.getServerName() + (defaultPort ? "" : ":" + port)
-                + request.getContextPath();
+    /**
+     * URL absoluta para los enlaces de los correos, a partir de la URL pública configurada
+     * (APP_BASE_URL) y nunca de la cabecera Host de la petición.
+     */
+    protected String absoluteUrl(String path) {
+        return App.get().getConfig().getBaseUrl() + path;
     }
 }

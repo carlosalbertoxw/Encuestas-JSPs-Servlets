@@ -22,6 +22,12 @@ public final class Messages {
     public static final String PASSWORD_RESET_INVALID = "El enlace para restablecer la contraseña no es válido o expiró.";
     public static final String TOO_MANY_REQUESTS = "Demasiados intentos. Espera un minuto y vuelve a intentarlo.";
 
+    public static final String SAME_EMAIL = "Ese ya es tu correo actual.";
+    public static final String EMAIL_CHANGE_REQUESTED = "Te enviamos un enlace al correo nuevo. El cambio se aplicará cuando lo abras; mientras tanto sigues usando tu correo actual.";
+    public static final String EMAIL_CHANGED = "Tu correo se actualizó. Inicia sesión con el correo nuevo.";
+    public static final String EMAIL_CHANGE_INVALID = "El enlace para cambiar el correo no es válido o expiró.";
+    public static final String EMAIL_IN_USE = "Ese correo ya lo usa otra cuenta.";
+
     public static final String POLL_SAVED = "Los datos se guardaron exitosamente";
     public static final String POLL_UPDATED = "Los datos se actualizaron exitosamente";
     public static final String POLL_DELETED = "Los datos se borraron exitosamente";

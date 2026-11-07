@@ -55,7 +55,7 @@ public final class DevDataSeeder {
         users.confirmEmail(ana.getUser().getId());
         users.updateUserName(ana.getUser().getId(), "ana");
         users.updateName(ana.getUser().getId(), "Ana");
-        List<Poll> demoPolls = polls.getPolls(demo.getUser().getId());
+        List<Poll> demoPolls = polls.getPolls(demo.getUser().getId(), 1, 1).getItems();
         Answer answer = new Answer();
         answer.setStars(5);
         answer.setComment("¡Muy fácil de usar!");

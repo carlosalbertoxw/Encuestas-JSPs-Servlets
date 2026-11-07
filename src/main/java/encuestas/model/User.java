@@ -8,6 +8,7 @@ public class User {
     private int id;
     private String email;
     private boolean emailConfirmed;
+    private String pendingEmail;
     private String passwordHash;
     private String securityStamp;
 
@@ -33,6 +34,15 @@ public class User {
 
     public void setEmailConfirmed(boolean emailConfirmed) {
         this.emailConfirmed = emailConfirmed;
+    }
+
+    /** Correo nuevo pendiente de confirmar, o null. */
+    public String getPendingEmail() {
+        return pendingEmail;
+    }
+
+    public void setPendingEmail(String pendingEmail) {
+        this.pendingEmail = pendingEmail;
     }
 
     public String getPasswordHash() {

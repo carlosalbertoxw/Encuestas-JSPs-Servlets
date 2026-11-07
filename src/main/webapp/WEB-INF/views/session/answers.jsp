@@ -26,22 +26,8 @@
         </div>
     </c:forEach>
 
-    <c:if test="${result.totalPages > 1}">
-        <nav aria-label="Paginación de respuestas">
-            <ul class="pagination justify-content-center">
-                <li class="page-item ${result.hasPrevious ? '' : 'disabled'}">
-                    <a class="page-link"
-                       href="${pageContext.request.contextPath}/Answer?page=answers&id=${pollId}&p=${result.page - 1}">Anterior</a>
-                </li>
-                <li class="page-item disabled">
-                    <span class="page-link">${result.page} / ${result.totalPages}</span>
-                </li>
-                <li class="page-item ${result.hasNext ? '' : 'disabled'}">
-                    <a class="page-link"
-                       href="${pageContext.request.contextPath}/Answer?page=answers&id=${pollId}&p=${result.page + 1}">Siguiente</a>
-                </li>
-            </ul>
-        </nav>
-    </c:if>
+    <jsp:include page="/WEB-INF/views/template/pager.jsp">
+        <jsp:param name="baseUrl" value="${pageContext.request.contextPath}/Answer?page=answers&id=${pollId}"/>
+    </jsp:include>
 </div>
 <%@ include file="/WEB-INF/views/template/scripts.jsp" %>

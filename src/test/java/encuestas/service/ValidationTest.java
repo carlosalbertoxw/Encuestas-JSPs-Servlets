@@ -16,7 +16,8 @@ class ValidationTest {
         assertFalse(Validation.isEmail("a@b"));
         assertFalse(Validation.isEmail(""));
         assertFalse(Validation.isEmail(null));
-        assertFalse(Validation.isEmail("a".repeat(50) + "@x.com"));
+        assertTrue(Validation.isEmail("a".repeat(60) + "@x.com"));
+        assertFalse(Validation.isEmail("a".repeat(Validation.EMAIL_MAX) + "@x.com"));
     }
 
     @Test

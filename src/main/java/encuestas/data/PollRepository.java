@@ -27,21 +27,35 @@ public class PollRepository {
         this.dataSource = dataSource;
     }
 
-    public List<Poll> getPolls(int userId) {
+    /** Página de encuestas del usuario, ordenadas por posición. */
+    public PagedResult<Poll> getPolls(int userId, int page, int pageSize) {
+        int safePage = PagedResult.normalizePage(page);
+        int safeSize = PagedResult.normalizePageSize(pageSize);
         List<Poll> polls = new ArrayList<>();
-        String sql = "SELECT " + COLUMNS + " FROM a_polls WHERE p_user_key=? ORDER BY p_position ASC";
-        try (Connection connection = dataSource.getConnection();
-             PreparedStatement statement = connection.prepareStatement(sql)) {
-            statement.setInt(1, userId);
-            try (ResultSet rs = statement.executeQuery()) {
-                while (rs.next()) {
-                    polls.add(mapPoll(rs));
+        long total = 0;
+        try (Connection connection = dataSource.getConnection()) {
+            try (PreparedStatement statement = connection.prepareStatement(
+                    "SELECT COUNT(*) FROM a_polls WHERE p_user_key=?")) {
+                statement.setInt(1, userId);
+                try (ResultSet rs = statement.executeQuery()) {
+                    total = rs.next() ? rs.getLong(1) : 0;
+                }
+            }
+            try (PreparedStatement statement = connection.prepareStatement("SELECT " + COLUMNS
+                    + " FROM a_polls WHERE p_user_key=? ORDER BY p_position ASC, p_key ASC LIMIT ? OFFSET ?")) {
+                statement.setInt(1, userId);
+                statement.setInt(2, safeSize);
+                statement.setInt(3, (safePage - 1) * safeSize);
+                try (ResultSet rs = statement.executeQuery()) {
+                    while (rs.next()) {
+                        polls.add(mapPoll(rs));
+                    }
                 }
             }
         } catch (SQLException e) {
             LOGGER.log(Level.SEVERE, "Error al consultar las encuestas", e);
         }
-        return polls;
+        return new PagedResult<>(polls, safePage, safeSize, total);
     }
 
     /** Encuesta por id restringida a su dueño (para editar/borrar/ver respuestas). */

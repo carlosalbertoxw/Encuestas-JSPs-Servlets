@@ -20,12 +20,12 @@
                             <a href="#" class="nav-link dropdown-toggle" role="button" data-bs-toggle="dropdown" aria-expanded="false">Usuario</a>
                             <ul class="dropdown-menu dropdown-menu-end">
                                 <li><a class="dropdown-item" href="${pageContext.request.contextPath}/User?profile=${sessionScope.s_user}">Ver perfil</a></li>
-                                <li><a class="dropdown-item" href="${pageContext.request.contextPath}/User?page=edit-profile">Editar perfil</a></li>
-                                <li><a class="dropdown-item" href="${pageContext.request.contextPath}/User?page=change-user">Cambiar usuario</a></li>
-                                <li><a class="dropdown-item" href="${pageContext.request.contextPath}/User?page=change-email">Cambiar correo electrónico</a></li>
-                                <li><a class="dropdown-item" href="${pageContext.request.contextPath}/User?page=change-password">Cambiar contraseña</a></li>
+                                <li><a class="dropdown-item" href="${pageContext.request.contextPath}/Account?page=edit-profile">Editar perfil</a></li>
+                                <li><a class="dropdown-item" href="${pageContext.request.contextPath}/Account?page=change-user">Cambiar usuario</a></li>
+                                <li><a class="dropdown-item" href="${pageContext.request.contextPath}/Account?page=change-email">Cambiar correo electrónico</a></li>
+                                <li><a class="dropdown-item" href="${pageContext.request.contextPath}/Account?page=change-password">Cambiar contraseña</a></li>
                                 <li><hr class="dropdown-divider"></li>
-                                <li><a class="dropdown-item" href="${pageContext.request.contextPath}/User?page=delete-account">Borrar cuenta</a></li>
+                                <li><a class="dropdown-item" href="${pageContext.request.contextPath}/Account?page=delete-account">Borrar cuenta</a></li>
                                 <li>
                                     <form action="${pageContext.request.contextPath}/User" method="post">
                                         <input type="hidden" name="form" value="close-session">

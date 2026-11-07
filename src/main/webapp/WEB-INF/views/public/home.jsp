@@ -17,7 +17,7 @@
                     <div class="mb-3">
                         <label class="form-label" for="signInEmail">Correo electrónico</label>
                         <input class="form-control" type="email" name="email" id="signInEmail"
-                               autocomplete="username" maxlength="50" required
+                               autocomplete="username" maxlength="254" required
                                value="<c:out value='${loginEmail}'/>">
                     </div>
                     <div class="mb-3">
@@ -44,7 +44,7 @@
                     <div class="mb-3">
                         <label class="form-label" for="signUpEmail">Correo electrónico</label>
                         <input class="form-control" type="email" name="email" id="signUpEmail"
-                               autocomplete="email" maxlength="50" required
+                               autocomplete="email" maxlength="254" required
                                value="<c:out value='${registerEmail}'/>">
                     </div>
                     <div class="mb-3">

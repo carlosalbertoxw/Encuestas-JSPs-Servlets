@@ -52,4 +52,20 @@ class TokenServiceTest {
         String token = other.createEmailConfirmationToken(42);
         assertNull(service.validateEmailConfirmationToken(token));
     }
+
+    @Test
+    void emailChangeTokenRoundTripKeepsUnusualAddresses() {
+        String token = service.createEmailChangeToken(7, "nombre:raro@pruebas.dev");
+        TokenService.EmailChangeToken parsed = service.validateEmailChangeToken(token);
+        assertNotNull(parsed);
+        assertEquals(7, parsed.userId());
+        assertEquals("nombre:raro@pruebas.dev", parsed.email());
+    }
+
+    @Test
+    void tokensOfOtherPurposesAreNotEmailChangeTokens() {
+        assertNull(service.validateEmailChangeToken(service.createEmailConfirmationToken(7)));
+        assertNull(service.validateEmailConfirmationToken(service.createEmailChangeToken(7, "a@b.dev")));
+        assertNull(service.validatePasswordResetToken(service.createEmailChangeToken(7, "a@b.dev")));
+    }
 }

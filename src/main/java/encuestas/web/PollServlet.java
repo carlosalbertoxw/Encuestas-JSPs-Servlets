@@ -1,5 +1,6 @@
 package encuestas.web;
 
+import encuestas.data.PagedResult;
 import encuestas.infrastructure.App;
 import encuestas.model.Poll;
 import encuestas.service.AuthService;
@@ -55,7 +56,8 @@ public class PollServlet extends BaseServlet {
     private void dashboard(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
         int userId = AuthService.currentUserId(request);
-        request.setAttribute("polls", App.get().getPolls().getPolls(userId));
+        request.setAttribute("result", App.get().getPolls().getPolls(userId, pageNumber(request),
+                PagedResult.DEFAULT_PAGE_SIZE));
         forward(request, response, "session/dashboard.jsp", "Tablero");
     }
 

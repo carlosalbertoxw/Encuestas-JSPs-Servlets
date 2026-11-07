@@ -15,7 +15,7 @@
                     <div class="mb-3">
                         <label class="form-label" for="email">Correo electrónico</label>
                         <input class="form-control" type="email" name="email" id="email"
-                               autocomplete="email" maxlength="50" required
+                               autocomplete="email" maxlength="254" required
                                value="<c:out value='${old.email}'/>">
                     </div>
                     <button class="btn btn-primary w-100" type="submit">Enviar enlace</button>

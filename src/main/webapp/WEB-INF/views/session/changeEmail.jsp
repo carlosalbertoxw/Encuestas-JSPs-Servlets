@@ -8,13 +8,13 @@
         <h4 class="text-center mb-3"><c:out value="${title}"/></h4>
         <div class="card">
             <div class="card-body">
-                <form action="${pageContext.request.contextPath}/User" method="post">
+                <form action="${pageContext.request.contextPath}/Account" method="post">
                     <input type="hidden" name="form" value="change-email">
                     <input type="hidden" name="_csrf" value="${sessionScope.csrf_token}">
                     <div class="mb-3">
                         <label class="form-label" for="email">Correo electrónico</label>
                         <input class="form-control" type="email" name="email" id="email"
-                               autocomplete="email" maxlength="50" required
+                               autocomplete="email" maxlength="254" required
                                value="<c:out value='${not empty old.email ? old.email : sessionScope.s_email}'/>">
                     </div>
                     <div class="mb-3">

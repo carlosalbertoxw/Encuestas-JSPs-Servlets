@@ -24,6 +24,9 @@ public final class Database {
         config.setMaximumPoolSize(10);
         config.setMinimumIdle(2);
         config.setPoolName("encuestas-pool");
+        // Al arrancar, reintenta la conexión hasta 60 s: en el primer arranque de Docker, MySQL
+        // responde a la sonda de salud antes de aceptar conexiones TCP.
+        config.setInitializationFailTimeout(60_000);
         dataSource = new HikariDataSource(config);
     }
 

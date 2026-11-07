@@ -11,9 +11,9 @@ import javax.crypto.Mac;
 import javax.crypto.spec.SecretKeySpec;
 
 /**
- * Genera y valida tokens firmados (HMAC-SHA256) y con caducidad para confirmar el correo
- * y restablecer la contraseña. Son sin estado: no se guardan en la base de datos. El token
- * de restablecimiento incluye el sello de seguridad del usuario, así que queda invalidado
+ * Genera y valida tokens firmados (HMAC-SHA256) y con caducidad para confirmar el correo,
+ * confirmar un cambio de correo y restablecer la contraseña. Son sin estado: no se guardan
+ * en la base de datos. El token de restablecimiento incluye el sello de seguridad del usuario, así que queda invalidado
  * en cuanto la contraseña cambia (uso único). Admite varias claves (rotación): firma con
  * la más reciente y valida contra todas las vigentes.
  */
@@ -23,8 +23,13 @@ public final class TokenService {
     public record ResetToken(int userId, String securityStamp) {
     }
 
+    /** Resultado de validar un token de cambio de correo. */
+    public record EmailChangeToken(int userId, String email) {
+    }
+
     private static final String CONFIRM_PURPOSE = "confirm";
     private static final String RESET_PURPOSE = "reset";
+    private static final String CHANGE_EMAIL_PURPOSE = "change-email";
     private static final Duration CONFIRM_LIFETIME = Duration.ofHours(24);
     private static final Duration RESET_LIFETIME = Duration.ofHours(1);
     private static final char SEPARATOR = ':';
@@ -70,6 +75,30 @@ public final class TokenService {
         }
         Integer userId = parseInt(parts[1]);
         return userId == null ? null : new ResetToken(userId, parts[2]);
+    }
+
+    /** Token para confirmar el cambio a {@code newEmail}; se envía a esa dirección. */
+    public String createEmailChangeToken(int userId, String newEmail) {
+        // El correo va en Base64 para que un ':' en la dirección no rompa el formato.
+        String encodedEmail = Base64.getUrlEncoder().withoutPadding()
+                .encodeToString(newEmail.getBytes(StandardCharsets.UTF_8));
+        return sign(CHANGE_EMAIL_PURPOSE + SEPARATOR + userId + SEPARATOR + encodedEmail + SEPARATOR
+                + Instant.now().plus(CONFIRM_LIFETIME).toEpochMilli());
+    }
+
+    /** Devuelve el usuario y el correo nuevo, o null si el token es inválido o expiró. */
+    public EmailChangeToken validateEmailChangeToken(String token) {
+        String[] parts = openToken(token, CHANGE_EMAIL_PURPOSE, 4);
+        Integer userId = parts == null ? null : parseInt(parts[1]);
+        if (userId == null) {
+            return null;
+        }
+        try {
+            return new EmailChangeToken(userId,
+                    new String(Base64.getUrlDecoder().decode(parts[2]), StandardCharsets.UTF_8));
+        } catch (IllegalArgumentException e) {
+            return null;
+        }
     }
 
     private String sign(String payload) {

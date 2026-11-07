@@ -27,6 +27,9 @@ public class AppInitializer implements ServletContextListener {
     @Override
     public void contextInitialized(ServletContextEvent event) {
         AppConfig config = AppConfig.fromEnvironment();
+        if (!config.isDevelopment()) {
+            JsonLogFormatter.install();
+        }
         App app = App.start(config);
         MigrationRunner.run(app.getDatabase().getDataSource());
         if (config.isDevelopment()) {
@@ -84,5 +87,6 @@ public class AppInitializer implements ServletContextListener {
     @Override
     public void contextDestroyed(ServletContextEvent event) {
         App.stop();
+        JsonLogFormatter.uninstall();
     }
 }
