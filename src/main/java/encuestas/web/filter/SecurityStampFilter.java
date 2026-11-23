@@ -1,7 +1,8 @@
 package encuestas.web.filter;
 
-import encuestas.infrastructure.App;
+import encuestas.data.UserRepository;
 import encuestas.service.AuthService;
+import encuestas.service.SecurityStampCache;
 import jakarta.servlet.Filter;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
@@ -18,6 +19,14 @@ import java.io.IOException;
  */
 public class SecurityStampFilter implements Filter {
 
+    private final UserRepository users;
+    private final SecurityStampCache stampCache;
+
+    public SecurityStampFilter(UserRepository users, SecurityStampCache stampCache) {
+        this.users = users;
+        this.stampCache = stampCache;
+    }
+
     @Override
     public void doFilter(ServletRequest request, ServletResponse response, FilterChain chain)
             throws IOException, ServletException {
@@ -26,8 +35,7 @@ public class SecurityStampFilter implements Filter {
         if (session != null && session.getAttribute(AuthService.SESSION_ID) != null) {
             int userId = (Integer) session.getAttribute(AuthService.SESSION_ID);
             String sessionStamp = (String) session.getAttribute(AuthService.SESSION_STAMP);
-            String currentStamp = App.get().getStampCache()
-                    .get(userId, id -> App.get().getUsers().getSecurityStamp(id));
+            String currentStamp = stampCache.get(userId, users::getSecurityStamp);
             if (currentStamp == null || !currentStamp.equals(sessionStamp)) {
                 session.invalidate();
             }

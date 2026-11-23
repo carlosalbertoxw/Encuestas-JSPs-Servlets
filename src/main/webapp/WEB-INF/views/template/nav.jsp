@@ -4,7 +4,7 @@
     <div class="container">
         <c:choose>
             <c:when test="${not empty sessionScope.s_id}">
-                <a class="navbar-brand" href="${pageContext.request.contextPath}/Poll?page=dashboard">Encuestas</a>
+                <a class="navbar-brand" href="${pageContext.request.contextPath}/Poll/Index">Encuestas</a>
                 <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar"
                         aria-controls="navbar" aria-expanded="false" aria-label="Alternar navegación">
                     <span class="navbar-toggler-icon"></span>
@@ -12,23 +12,22 @@
                 <div id="navbar" class="collapse navbar-collapse">
                     <ul class="navbar-nav me-auto">
                         <li class="nav-item">
-                            <a class="nav-link" href="${pageContext.request.contextPath}/Poll?page=add">Agregar encuesta</a>
+                            <a class="nav-link" href="${pageContext.request.contextPath}/Poll/Add">Agregar encuesta</a>
                         </li>
                     </ul>
                     <ul class="navbar-nav">
                         <li class="nav-item dropdown">
                             <a href="#" class="nav-link dropdown-toggle" role="button" data-bs-toggle="dropdown" aria-expanded="false">Usuario</a>
                             <ul class="dropdown-menu dropdown-menu-end">
-                                <li><a class="dropdown-item" href="${pageContext.request.contextPath}/User?profile=${sessionScope.s_user}">Ver perfil</a></li>
-                                <li><a class="dropdown-item" href="${pageContext.request.contextPath}/Account?page=edit-profile">Editar perfil</a></li>
-                                <li><a class="dropdown-item" href="${pageContext.request.contextPath}/Account?page=change-user">Cambiar usuario</a></li>
-                                <li><a class="dropdown-item" href="${pageContext.request.contextPath}/Account?page=change-email">Cambiar correo electrónico</a></li>
-                                <li><a class="dropdown-item" href="${pageContext.request.contextPath}/Account?page=change-password">Cambiar contraseña</a></li>
+                                <li><a class="dropdown-item" href="${pageContext.request.contextPath}/User/Index?profile=${sessionScope.s_user}">Ver perfil</a></li>
+                                <li><a class="dropdown-item" href="${pageContext.request.contextPath}/Account/EditProfile">Editar perfil</a></li>
+                                <li><a class="dropdown-item" href="${pageContext.request.contextPath}/Account/ChangeUser">Cambiar usuario</a></li>
+                                <li><a class="dropdown-item" href="${pageContext.request.contextPath}/Account/ChangeEmail">Cambiar correo electrónico</a></li>
+                                <li><a class="dropdown-item" href="${pageContext.request.contextPath}/Account/ChangePassword">Cambiar contraseña</a></li>
                                 <li><hr class="dropdown-divider"></li>
-                                <li><a class="dropdown-item" href="${pageContext.request.contextPath}/Account?page=delete-account">Borrar cuenta</a></li>
+                                <li><a class="dropdown-item" href="${pageContext.request.contextPath}/Account/DeleteAccount">Borrar cuenta</a></li>
                                 <li>
-                                    <form action="${pageContext.request.contextPath}/User" method="post">
-                                        <input type="hidden" name="form" value="close-session">
+                                    <form action="${pageContext.request.contextPath}/User/CloseSession" method="post">
                                         <input type="hidden" name="_csrf" value="${sessionScope.csrf_token}">
                                         <button type="submit" class="dropdown-item">Cerrar sesión</button>
                                     </form>

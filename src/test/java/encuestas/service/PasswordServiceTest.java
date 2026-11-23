@@ -29,14 +29,6 @@ class PasswordServiceTest {
     }
 
     @Test
-    void legacySha1HashVerifiesAndRequestsRehash() {
-        // SHA-1("123456") como lo generaba la versión anterior de la aplicación.
-        String legacy = "7c4a8d09ca3762af61e59520943dc26494f8941b";
-        assertEquals(PasswordService.Outcome.SUCCESS_REHASH_NEEDED, service.verify(legacy, "123456"));
-        assertEquals(PasswordService.Outcome.FAILED, service.verify(legacy, "incorrecta"));
-    }
-
-    @Test
     void corruptStoredHashFailsInsteadOfThrowing() {
         assertEquals(PasswordService.Outcome.FAILED, service.verify("PBKDF2$abc$!!$??", "x"));
         assertEquals(PasswordService.Outcome.FAILED, service.verify("basura", "x"));
@@ -46,22 +38,20 @@ class PasswordServiceTest {
     @Test
     void pbkdf2WithFewerIterationsRequestsRehash() {
         // Hash válido pero con menos iteraciones que la política actual.
-        String hash = service.hash("secreta123");
-        String[] parts = hash.split("\\$");
-        String weaker = weakHash("secreta123", parts[2]);
+        String weaker = service.hash("secreta123", 210_000);
         assertEquals(PasswordService.Outcome.SUCCESS_REHASH_NEEDED, service.verify(weaker, "secreta123"));
+        assertTrue(service.hash("secreta123").startsWith("PBKDF2$" + PasswordService.ITERATIONS + "$"));
     }
 
-    private static String weakHash(String password, String saltBase64) {
-        try {
-            byte[] salt = java.util.Base64.getDecoder().decode(saltBase64);
-            javax.crypto.spec.PBEKeySpec spec =
-                    new javax.crypto.spec.PBEKeySpec(password.toCharArray(), salt, 1000, 256);
-            byte[] hash = javax.crypto.SecretKeyFactory.getInstance("PBKDF2WithHmacSHA256")
-                    .generateSecret(spec).getEncoded();
-            return "PBKDF2$1000$" + saltBase64 + "$" + java.util.Base64.getEncoder().encodeToString(hash);
-        } catch (Exception e) {
-            throw new IllegalStateException(e);
-        }
+    @Test
+    void unsaltedSha1HashesAreRejected() {
+        // SHA-1("123456"): formato sin sal que la aplicación ya no acepta.
+        assertEquals(PasswordService.Outcome.FAILED, service.verify("7c4a8d09ca3762af61e59520943dc26494f8941b", "123456"));
+    }
+
+    @Test
+    void dummyVerificationDoesNotThrow() {
+        service.verifyAgainstDummy("cualquiera");
+        service.verifyAgainstDummy("");
     }
 }

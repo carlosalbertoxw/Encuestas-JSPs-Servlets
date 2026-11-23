@@ -9,7 +9,7 @@ services:
       MYSQL_USER: ${MYSQL_USER:-encuestas}
       MYSQL_PASSWORD: ${MYSQL_PASSWORD:-encuestas}
     ports:
-      - "${MYSQL_PORT:-3306}:3306"
+      - "127.0.0.1:${MYSQL_PORT:-3306}:3306"
     # El esquema lo aplican las migraciones al arrancar la aplicación
     # (src/main/resources/db/migration); el contenedor solo crea la base vacía.
     volumes:
@@ -26,8 +26,8 @@ services:
     container_name: encuestas-jsp-mailpit
     restart: unless-stopped
     ports:
-      - "${MAILPIT_SMTP_PORT:-1025}:1025"
-      - "${MAILPIT_UI_PORT:-8025}:8025"
+      - "127.0.0.1:${MAILPIT_SMTP_PORT:-1025}:1025"
+      - "127.0.0.1:${MAILPIT_UI_PORT:-8025}:8025"
 
   web:
     build:
@@ -57,6 +57,8 @@ services:
       # APP_KEYS_DIR (persistido en el volumen web-keys).
       APP_TOKEN_SECRET: ${APP_TOKEN_SECRET:-}
       APP_KEYS_DIR: /var/lib/encuestas
+      # Proxies inversos de confianza (IPs o CIDR); vacío = se ignoran las cabeceras X-Forwarded-*.
+      TRUSTED_PROXIES: ${TRUSTED_PROXIES:-}
     ports:
       - "${WEB_PORT:-8080}:8080"
     volumes:

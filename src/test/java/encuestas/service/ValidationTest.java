@@ -25,16 +25,11 @@ class ValidationTest {
     }
 
     @Test
-    void newPasswordPolicy() {
-        assertTrue(Validation.isNewPassword("123456"));
-        assertFalse(Validation.isNewPassword("12345"));
-        assertFalse(Validation.isNewPassword("a".repeat(51)));
-    }
-
-    @Test
-    void legacyShortPasswordsCanStillSignIn() {
-        assertTrue(Validation.isPassword("abc"));
+    void passwordPolicy() {
+        assertTrue(Validation.isPassword("123456"));
+        assertFalse(Validation.isPassword("12345"));
         assertFalse(Validation.isPassword(""));
+        assertFalse(Validation.isPassword("a".repeat(51)));
     }
 
     @Test

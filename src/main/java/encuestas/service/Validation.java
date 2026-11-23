@@ -24,12 +24,8 @@ public final class Validation {
         return value != null && !value.isEmpty() && value.length() <= EMAIL_MAX && EMAIL.matcher(value).matches();
     }
 
-    /** Sin longitud mínima: cuentas antiguas podrían tener contraseñas más cortas que la política actual. */
+    /** Misma política para las contraseñas nuevas y para las que se escriben al entrar. */
     public static boolean isPassword(String value) {
-        return hasLength(value, 1, PASSWORD_MAX);
-    }
-
-    public static boolean isNewPassword(String value) {
         return hasLength(value, PASSWORD_MIN, PASSWORD_MAX);
     }
 

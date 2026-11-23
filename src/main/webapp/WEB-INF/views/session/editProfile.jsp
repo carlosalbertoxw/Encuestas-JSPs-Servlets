@@ -8,8 +8,7 @@
         <h4 class="text-center mb-3"><c:out value="${title}"/></h4>
         <div class="card">
             <div class="card-body">
-                <form action="${pageContext.request.contextPath}/Account" method="post">
-                    <input type="hidden" name="form" value="edit-profile">
+                <form action="${pageContext.request.contextPath}/Account/EditProfile" method="post">
                     <input type="hidden" name="_csrf" value="${sessionScope.csrf_token}">
                     <div class="mb-3">
                         <label class="form-label" for="name">Nombre</label>

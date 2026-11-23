@@ -14,9 +14,7 @@
         </div>
         <div class="card">
             <div class="card-body">
-                <form action="${pageContext.request.contextPath}/Answer" method="post">
-                    <input type="hidden" name="form" value="add">
-                    <input type="hidden" name="id" value="${poll.id}">
+                <form action="${pageContext.request.contextPath}/Answer/Add/${poll.id}" method="post">
                     <input type="hidden" name="_csrf" value="${sessionScope.csrf_token}">
                     <div class="mb-3">
                         <span class="form-label d-block">Estrellas</span>

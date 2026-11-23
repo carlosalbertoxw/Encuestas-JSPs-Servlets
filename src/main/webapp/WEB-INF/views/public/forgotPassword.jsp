@@ -9,8 +9,7 @@
         <div class="card">
             <div class="card-body">
                 <p class="text-secondary">Ingresa tu correo y te enviaremos un enlace para restablecer la contraseña.</p>
-                <form action="${pageContext.request.contextPath}/User" method="post">
-                    <input type="hidden" name="form" value="forgot-password">
+                <form action="${pageContext.request.contextPath}/User/ForgotPassword" method="post">
                     <input type="hidden" name="_csrf" value="${sessionScope.csrf_token}">
                     <div class="mb-3">
                         <label class="form-label" for="email">Correo electrónico</label>

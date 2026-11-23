@@ -27,7 +27,7 @@
     </c:forEach>
 
     <jsp:include page="/WEB-INF/views/template/pager.jsp">
-        <jsp:param name="baseUrl" value="${pageContext.request.contextPath}/Answer?page=answers&id=${pollId}"/>
+        <jsp:param name="baseUrl" value="${pageContext.request.contextPath}/Answer/Answers/${pollId}"/>
     </jsp:include>
 </div>
 <%@ include file="/WEB-INF/views/template/scripts.jsp" %>

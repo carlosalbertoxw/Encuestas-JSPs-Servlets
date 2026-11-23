@@ -8,7 +8,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 /**
- * Concentra la lógica de autenticación (verificar credenciales, migrar hashes antiguos,
+ * Concentra la lógica de autenticación (verificar credenciales, regenerar hashes antiguos,
  * emitir la sesión con sus atributos) para mantenerla fuera de los servlets y poder probarla.
  */
 public class AuthService {
@@ -48,9 +48,13 @@ public class AuthService {
         }
 
         UserProfile profile = users.getProfileByEmail(email);
-        PasswordService.Outcome outcome = profile == null
-                ? PasswordService.Outcome.FAILED
-                : passwords.verify(profile.getUser().getPasswordHash(), password);
+        PasswordService.Outcome outcome;
+        if (profile == null) {
+            passwords.verifyAgainstDummy(password);
+            outcome = PasswordService.Outcome.FAILED;
+        } else {
+            outcome = passwords.verify(profile.getUser().getPasswordHash(), password);
+        }
 
         if (outcome == PasswordService.Outcome.FAILED) {
             lockout.recordFailure(email);
@@ -68,7 +72,7 @@ public class AuthService {
         }
 
         if (outcome == PasswordService.Outcome.SUCCESS_REHASH_NEEDED) {
-            // El hash usa un esquema o parámetros antiguos: se regenera de forma transparente.
+            // El hash usa parámetros antiguos: se regenera de forma transparente.
             // No rota el sello de seguridad para no cerrar otras sesiones válidas del usuario.
             users.updatePassword(profile.getUser().getId(), passwords.hash(password));
             LOGGER.log(Level.INFO, "Hash de contraseña actualizado para el usuario {0}", profile.getUser().getId());
@@ -91,11 +95,7 @@ public class AuthService {
 
     /** Reemite los atributos de la sesión tras editar perfil, usuario o correo. */
     public void refreshSession(HttpServletRequest request, int userId) {
-        encuestas.model.User user = users.getUser(userId);
-        if (user == null) {
-            return;
-        }
-        UserProfile profile = users.getProfileByEmail(user.getEmail());
+        UserProfile profile = users.getProfileById(userId);
         if (profile != null) {
             setSessionAttributes(request.getSession(), profile);
         }

@@ -94,6 +94,20 @@
             <version>2.0.5</version>
             <scope>test</scope>
         </dependency>
+
+        <!-- Tomcat embebido para las pruebas HTTP de punta a punta (servlets, filtros y JSP reales). -->
+        <dependency>
+            <groupId>org.apache.tomcat.embed</groupId>
+            <artifactId>tomcat-embed-core</artifactId>
+            <version>11.0.29</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.tomcat.embed</groupId>
+            <artifactId>tomcat-embed-jasper</artifactId>
+            <version>11.0.29</version>
+            <scope>test</scope>
+        </dependency>
     </dependencies>
 
     <build>

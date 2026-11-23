@@ -8,8 +8,7 @@
         <h4 class="text-center mb-3"><c:out value="${title}"/></h4>
         <div class="card">
             <div class="card-body">
-                <form action="${pageContext.request.contextPath}/Poll" method="post">
-                    <input type="hidden" name="form" value="${poll.id == 0 ? 'add' : 'update'}">
+                <form action="${pageContext.request.contextPath}/Poll/${poll.id == 0 ? 'Add' : 'Update'}" method="post">
                     <input type="hidden" name="id" value="${poll.id}">
                     <input type="hidden" name="_csrf" value="${sessionScope.csrf_token}">
                     <div class="mb-3">
@@ -25,7 +24,7 @@
                     <div class="mb-3">
                         <label class="form-label" for="pollPosition">Posición</label>
                         <input class="form-control" type="number" min="1" max="999999" name="position"
-                               id="pollPosition" required value="${poll.id == 0 ? '' : poll.position}">
+                               id="pollPosition" required value="${poll.position == 0 ? '' : poll.position}">
                     </div>
                     <button class="btn btn-primary w-100" type="submit">Guardar</button>
                 </form>
