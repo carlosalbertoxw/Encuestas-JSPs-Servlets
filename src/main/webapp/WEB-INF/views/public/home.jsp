@@ -10,8 +10,7 @@
         <div class="card">
             <div class="card-body">
                 <h4 class="card-title text-center mb-3">Acceso</h4>
-                <form action="${pageContext.request.contextPath}/User" method="post">
-                    <input type="hidden" name="form" value="sign-in">
+                <form action="${pageContext.request.contextPath}/User/Login" method="post">
                     <input type="hidden" name="_csrf" value="${sessionScope.csrf_token}">
                     <c:set var="loginEmail" value="${old.form eq 'sign-in' ? old.email : ''}"/>
                     <div class="mb-3">
@@ -27,7 +26,10 @@
                     </div>
                     <button class="btn btn-primary w-100" type="submit">Entrar</button>
                     <div class="text-center mt-2">
-                        <a href="${pageContext.request.contextPath}/User?page=forgot-password">¿Olvidaste tu contraseña?</a>
+                        <a href="${pageContext.request.contextPath}/User/ForgotPassword">¿Olvidaste tu contraseña?</a>
+                    </div>
+                    <div class="text-center mt-1">
+                        <a href="${pageContext.request.contextPath}/User/ResendConfirmation">¿No recibiste el correo de confirmación?</a>
                     </div>
                 </form>
             </div>
@@ -37,8 +39,7 @@
         <div class="card">
             <div class="card-body">
                 <h4 class="card-title text-center mb-3">Registro</h4>
-                <form action="${pageContext.request.contextPath}/User" method="post">
-                    <input type="hidden" name="form" value="sign-up">
+                <form action="${pageContext.request.contextPath}/User/Register" method="post">
                     <input type="hidden" name="_csrf" value="${sessionScope.csrf_token}">
                     <c:set var="registerEmail" value="${old.form eq 'sign-up' ? old.email : ''}"/>
                     <div class="mb-3">

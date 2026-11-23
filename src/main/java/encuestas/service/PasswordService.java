@@ -4,54 +4,53 @@ import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
 import java.security.spec.InvalidKeySpecException;
-import java.nio.charset.StandardCharsets;
 import java.util.Base64;
-import java.util.HexFormat;
+import java.util.UUID;
 import javax.crypto.SecretKeyFactory;
 import javax.crypto.spec.PBEKeySpec;
 
 /**
- * Hashing y verificación de contraseñas con PBKDF2 (HMAC-SHA256, sal aleatoria).
- * Verifica también los hashes SHA-1 sin sal de las cuentas antiguas y, en ese caso o
- * cuando el hash usa menos iteraciones que las actuales, señala
- * {@link Outcome#SUCCESS_REHASH_NEEDED} para que el inicio de sesión lo regenere
- * de forma transparente.
+ * Hashing y verificación de contraseñas con PBKDF2-HMAC-SHA256 y sal aleatoria. Cuando el
+ * hash guardado usa menos iteraciones que las actuales, señala
+ * {@link Outcome#SUCCESS_REHASH_NEEDED} para que el inicio de sesión lo regenere de forma
+ * transparente.
  */
 public class PasswordService {
 
     public enum Outcome {
         FAILED,
         SUCCESS,
-        /** La contraseña es correcta pero el hash usa un esquema o parámetros antiguos. */
+        /** La contraseña es correcta pero el hash usa parámetros antiguos. */
         SUCCESS_REHASH_NEEDED
     }
 
+    /** Iteraciones recomendadas por OWASP para PBKDF2-HMAC-SHA256. */
+    public static final int ITERATIONS = 600_000;
     private static final String PREFIX = "PBKDF2";
-    private static final int ITERATIONS = 210_000;
     private static final int SALT_BYTES = 16;
     private static final int HASH_BYTES = 32;
 
     private final SecureRandom random = new SecureRandom();
+    // Hash de una contraseña aleatoria: verificarlo cuesta lo mismo que el de una cuenta real.
+    private volatile String dummyHash;
 
     public String hash(String password) {
+        return hash(password, ITERATIONS);
+    }
+
+    /** Hash con un número de iteraciones concreto; solo lo usan las pruebas del re-hash. */
+    String hash(String password, int iterations) {
         byte[] salt = new byte[SALT_BYTES];
         random.nextBytes(salt);
-        byte[] hash = pbkdf2(password, salt, ITERATIONS);
+        byte[] hash = pbkdf2(password, salt, iterations);
         Base64.Encoder encoder = Base64.getEncoder();
-        return PREFIX + "$" + ITERATIONS + "$" + encoder.encodeToString(salt) + "$" + encoder.encodeToString(hash);
+        return PREFIX + "$" + iterations + "$" + encoder.encodeToString(salt) + "$" + encoder.encodeToString(hash);
     }
 
     public Outcome verify(String storedHash, String password) {
-        if (storedHash == null || password == null) {
+        if (storedHash == null || password == null || !storedHash.startsWith(PREFIX + "$")) {
             return Outcome.FAILED;
         }
-        if (storedHash.startsWith(PREFIX + "$")) {
-            return verifyPbkdf2(storedHash, password);
-        }
-        return verifyLegacySha1(storedHash, password);
-    }
-
-    private Outcome verifyPbkdf2(String storedHash, String password) {
         try {
             String[] parts = storedHash.split("\\$");
             if (parts.length != 4) {
@@ -71,24 +70,17 @@ public class PasswordService {
         }
     }
 
-    /** Cuentas creadas por la versión anterior de la aplicación (SHA-1 hex sin sal). */
-    private Outcome verifyLegacySha1(String storedHash, String password) {
-        if (storedHash.length() != 40) {
-            return Outcome.FAILED;
+    /**
+     * Hace el mismo trabajo que {@link #verify} cuando la cuenta no existe, para que el tiempo
+     * de respuesta no revele qué correos están registrados.
+     */
+    public void verifyAgainstDummy(String password) {
+        String hash = dummyHash;
+        if (hash == null) {
+            hash = hash(UUID.randomUUID().toString());
+            dummyHash = hash;
         }
-        try {
-            MessageDigest digest = MessageDigest.getInstance("SHA-1");
-            byte[] actual = digest.digest(password.getBytes(StandardCharsets.UTF_8));
-            byte[] expected;
-            try {
-                expected = HexFormat.of().parseHex(storedHash.toLowerCase());
-            } catch (IllegalArgumentException e) {
-                return Outcome.FAILED;
-            }
-            return MessageDigest.isEqual(expected, actual) ? Outcome.SUCCESS_REHASH_NEEDED : Outcome.FAILED;
-        } catch (NoSuchAlgorithmException e) {
-            return Outcome.FAILED;
-        }
+        verify(hash, password);
     }
 
     private static byte[] pbkdf2(String password, byte[] salt, int iterations) {

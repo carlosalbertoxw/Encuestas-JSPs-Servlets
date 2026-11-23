@@ -11,6 +11,10 @@ import encuestas.infrastructure.MigrationRunner;
 import encuestas.model.Answer;
 import encuestas.model.Poll;
 import encuestas.model.UserProfile;
+import java.sql.SQLException;
+import java.time.Duration;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.atomic.AtomicInteger;
 import org.junit.jupiter.api.AfterAll;
@@ -236,5 +240,37 @@ class RepositoryIT {
         users.setPendingEmail(userId, taken);
 
         assertEquals(RepositoryResult.DUPLICATE, users.confirmEmailChange(userId, taken, "s2"));
+    }
+
+    @Test
+    void attemptCountersIncrementAndReset() {
+        DbAttemptCounterStore store = new DbAttemptCounterStore(database.getDataSource());
+        Duration window = Duration.ofMinutes(1);
+        store.increment("prueba:contador", window);
+        store.increment("prueba:contador", window);
+        assertEquals(2, store.count("prueba:contador", window));
+        store.reset("prueba:contador");
+        assertEquals(0, store.count("prueba:contador", window));
+    }
+
+    @Test
+    void outboxSendsAndDeletesOrReschedulesOnFailure() throws SQLException {
+        EmailOutbox outbox = new EmailOutbox(database.getDataSource());
+        List<String> sent = new ArrayList<>();
+        outbox.enqueue("outbox-ok@pruebas.dev", "Asunto", "<p>Hola</p>");
+        while (outbox.dispatchBatch((to, subject, body) -> sent.add(to)) > 0) {
+            // Vacía la bandeja.
+        }
+        assertTrue(sent.contains("outbox-ok@pruebas.dev"));
+
+        outbox.enqueue("outbox-falla@pruebas.dev", "Asunto", "<p>Hola</p>");
+        outbox.dispatchBatch((to, subject, body) -> {
+            throw new IllegalStateException("SMTP no disponible");
+        });
+        // Reprogramado para más tarde: el siguiente lote no lo vuelve a intentar enseguida.
+        assertEquals(0, outbox.dispatchBatch((to, subject, body) -> sent.add(to)));
+        assertFalse(sent.contains("outbox-falla@pruebas.dev"));
+        assertEquals(Duration.ofSeconds(30), EmailOutbox.backoff(1));
+        assertEquals(Duration.ofHours(1), EmailOutbox.backoff(20));
     }
 }

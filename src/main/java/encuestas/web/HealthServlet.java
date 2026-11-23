@@ -1,6 +1,6 @@
 package encuestas.web;
 
-import encuestas.infrastructure.App;
+import encuestas.data.Database;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -16,6 +16,12 @@ import java.sql.Statement;
  */
 public class HealthServlet extends HttpServlet {
 
+    private final transient Database database;
+
+    public HealthServlet(Database database) {
+        this.database = database;
+    }
+
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response) throws IOException {
         response.setContentType("text/plain;charset=UTF-8");
@@ -26,12 +32,12 @@ public class HealthServlet extends HttpServlet {
         response.getWriter().print(healthy ? "Healthy" : "Unhealthy");
     }
 
-    private static boolean databaseResponds() {
-        try (Connection connection = App.get().getDatabase().getDataSource().getConnection();
+    private boolean databaseResponds() {
+        try (Connection connection = database.getDataSource().getConnection();
              Statement statement = connection.createStatement()) {
             statement.execute("SELECT 1");
             return true;
-        } catch (SQLException | IllegalStateException e) {
+        } catch (SQLException e) {
             return false;
         }
     }

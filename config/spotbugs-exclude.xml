@@ -13,4 +13,11 @@
     <Match>
         <Bug pattern="SE_NO_SERIALVERSIONID"/>
     </Match>
+    <!-- getSession() crea la sesión y changeSessionId() regenera su id (contra la fijación de
+         sesión): SpotBugs los cree sin efecto porque solo mira el valor devuelto. -->
+    <Match>
+        <Class name="encuestas.service.AuthService"/>
+        <Method name="signIn"/>
+        <Bug pattern="RV_RETURN_VALUE_IGNORED_NO_SIDE_EFFECT"/>
+    </Match>
 </FindBugsFilter>

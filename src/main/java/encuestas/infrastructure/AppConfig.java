@@ -21,6 +21,9 @@ public final class AppConfig {
     private final String keysDir;
     private final String baseUrl;
     private final SmtpSettings smtp;
+    private final TrustedProxies trustedProxies;
+    private final int authRateLimit;
+    private final int emailChangeRateLimit;
 
     private AppConfig(Builder builder) {
         this.dbHost = builder.dbHost;
@@ -33,6 +36,9 @@ public final class AppConfig {
         this.keysDir = builder.keysDir;
         this.baseUrl = builder.baseUrl;
         this.smtp = builder.smtp;
+        this.trustedProxies = builder.trustedProxies;
+        this.authRateLimit = builder.authRateLimit;
+        this.emailChangeRateLimit = builder.emailChangeRateLimit;
     }
 
     public static AppConfig fromEnvironment() {
@@ -56,6 +62,12 @@ public final class AppConfig {
                 env("SMTP_USER", ""),
                 env("SMTP_PASSWORD", ""),
                 env("SMTP_FROM", "Encuestas <no-reply@encuestas.local>"));
+        // Proxies inversos cuyas cabeceras X-Forwarded-* se aceptan; vacío = no se confía en ninguno.
+        builder.trustedProxies = TrustedProxies.parse(env("TRUSTED_PROXIES", ""));
+        // Peticiones permitidas por ventana (formularios de acceso por IP y minuto; cambios de
+        // correo por usuario y hora). Las pruebas los amplían.
+        builder.authRateLimit = parsePositive("RATE_LIMIT_AUTH", "10");
+        builder.emailChangeRateLimit = parsePositive("RATE_LIMIT_EMAIL_CHANGE", "3");
         return new AppConfig(builder);
     }
 
@@ -88,6 +100,19 @@ public final class AppConfig {
             return port;
         } catch (NumberFormatException e) {
             throw new IllegalStateException(name + " debe ser un puerto válido (1-65535): " + value, e);
+        }
+    }
+
+    static int parsePositive(String name, String defaultValue) {
+        String value = env(name, defaultValue);
+        try {
+            int number = Integer.parseInt(value);
+            if (number < 1) {
+                throw new NumberFormatException(value);
+            }
+            return number;
+        } catch (NumberFormatException e) {
+            throw new IllegalStateException(name + " debe ser un entero positivo: " + value, e);
         }
     }
 
@@ -143,6 +168,18 @@ public final class AppConfig {
         return smtp;
     }
 
+    public TrustedProxies getTrustedProxies() {
+        return trustedProxies;
+    }
+
+    public int getAuthRateLimit() {
+        return authRateLimit;
+    }
+
+    public int getEmailChangeRateLimit() {
+        return emailChangeRateLimit;
+    }
+
     private static final class Builder {
         private String dbHost;
         private int dbPort;
@@ -154,5 +191,8 @@ public final class AppConfig {
         private String keysDir;
         private String baseUrl;
         private SmtpSettings smtp;
+        private TrustedProxies trustedProxies;
+        private int authRateLimit;
+        private int emailChangeRateLimit;
     }
 }

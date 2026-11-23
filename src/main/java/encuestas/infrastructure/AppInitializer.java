@@ -1,5 +1,19 @@
 package encuestas.infrastructure;
 
+import encuestas.web.AccountServlet;
+import encuestas.web.AnswerServlet;
+import encuestas.web.HealthServlet;
+import encuestas.web.PollServlet;
+import encuestas.web.UserServlet;
+import encuestas.web.filter.AuthFilter;
+import encuestas.web.filter.CsrfFilter;
+import encuestas.web.filter.EncodingFilter;
+import encuestas.web.filter.ProxyHeadersFilter;
+import encuestas.web.filter.RequestIdFilter;
+import encuestas.web.filter.SecurityHeadersFilter;
+import encuestas.web.filter.SecurityStampFilter;
+import jakarta.servlet.DispatcherType;
+import jakarta.servlet.Filter;
 import jakarta.servlet.ServletContext;
 import jakarta.servlet.ServletContextEvent;
 import jakarta.servlet.ServletContextListener;
@@ -9,6 +23,7 @@ import java.io.InputStream;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
+import java.util.EnumSet;
 import java.util.HexFormat;
 import java.util.List;
 import java.util.Set;
@@ -17,12 +32,17 @@ import java.util.logging.Logger;
 
 /**
  * Punto de arranque de la aplicación: construye los servicios, aplica las migraciones
- * pendientes antes de aceptar tráfico y, en Development, inserta los datos de demostración.
+ * pendientes antes de aceptar tráfico, en Development inserta los datos de demostración y
+ * registra los filtros y servlets pasándoles los servicios por constructor.
  */
 @WebListener
 public class AppInitializer implements ServletContextListener {
 
     private static final Logger LOGGER = Logger.getLogger(AppInitializer.class.getName());
+    /** Rutas de la aplicación (las que llevan formularios y sesión), sin los archivos estáticos. */
+    private static final String[] APP_PATHS = {"", "/User/*", "/Account/*", "/Poll/*", "/Answer/*"};
+
+    private App app;
 
     @Override
     public void contextInitialized(ServletContextEvent event) {
@@ -30,19 +50,49 @@ public class AppInitializer implements ServletContextListener {
         if (!config.isDevelopment()) {
             JsonLogFormatter.install();
         }
-        App app = App.start(config);
+        app = new App(config);
         MigrationRunner.run(app.getDatabase().getDataSource());
         if (config.isDevelopment()) {
             DevDataSeeder.seed(app);
         }
+        app.startBackgroundJobs();
+
+        ServletContext context = event.getServletContext();
+        registerFilters(context);
+        registerServlets(context);
         // Fuera de Development la cookie de sesión solo viaja por HTTPS (los navegadores
         // tratan a localhost como origen seguro, así que el uso local sigue funcionando).
-        event.getServletContext().getSessionCookieConfig().setSecure(!config.isDevelopment());
+        context.getSessionCookieConfig().setSecure(!config.isDevelopment());
         // Versión de los assets derivada de su contenido, para el cache busting (?v=...).
-        event.getServletContext().setAttribute("assetsVersion",
-                computeAssetsVersion(event.getServletContext()));
+        context.setAttribute("assetsVersion", computeAssetsVersion(context));
         LOGGER.log(Level.INFO, "Aplicación iniciada (entorno {0})",
                 config.isDevelopment() ? "Development" : "Production");
+    }
+
+    /** El orden de registro es el orden de ejecución. */
+    private void registerFilters(ServletContext context) {
+        addFilter(context, "requestId", new RequestIdFilter(), "/*");
+        addFilter(context, "encoding", new EncodingFilter(), "/*");
+        // Antes que el resto: fija la IP y el esquema reales que usan el límite de peticiones y HSTS.
+        addFilter(context, "proxyHeaders", new ProxyHeadersFilter(app.getConfig().getTrustedProxies()), "/*");
+        addFilter(context, "securityHeaders", new SecurityHeadersFilter(app.getConfig().isDevelopment()), "/*");
+        addFilter(context, "securityStamp", new SecurityStampFilter(app.getUsers(), app.getStampCache()), "/*");
+        addFilter(context, "csrf", new CsrfFilter(), APP_PATHS);
+        addFilter(context, "auth", new AuthFilter(), "/Account/*", "/Poll/*", "/Answer/*");
+    }
+
+    private void registerServlets(ServletContext context) {
+        // "" es la raíz exacta del contexto: la página de inicio.
+        context.addServlet("user", new UserServlet(app)).addMapping("", "/User/*");
+        context.addServlet("account", new AccountServlet(app)).addMapping("/Account/*");
+        context.addServlet("poll", new PollServlet(app)).addMapping("/Poll/*");
+        context.addServlet("answer", new AnswerServlet(app)).addMapping("/Answer/*");
+        context.addServlet("health", new HealthServlet(app.getDatabase())).addMapping("/health/live", "/health/ready");
+    }
+
+    private static void addFilter(ServletContext context, String name, Filter filter, String... patterns) {
+        context.addFilter(name, filter)
+                .addMappingForUrlPatterns(EnumSet.of(DispatcherType.REQUEST), true, patterns);
     }
 
     /**
@@ -86,7 +136,9 @@ public class AppInitializer implements ServletContextListener {
 
     @Override
     public void contextDestroyed(ServletContextEvent event) {
-        App.stop();
+        if (app != null) {
+            app.close();
+        }
         JsonLogFormatter.uninstall();
     }
 }

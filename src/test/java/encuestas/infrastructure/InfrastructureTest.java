@@ -1,6 +1,7 @@
 package encuestas.infrastructure;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -38,6 +39,27 @@ class InfrastructureTest {
         assertEquals("V0001__esquema_inicial.sql", scripts.get(0));
         assertEquals(scripts.stream().sorted().toList(), scripts);
         assertTrue(scripts.contains("V0002__correo_pendiente.sql"));
+        assertTrue(scripts.contains("V0003__outbox_y_contadores.sql"));
+    }
+
+    @Test
+    void trustedProxiesMatchAddressesAndRanges() {
+        TrustedProxies proxies = TrustedProxies.parse("10.0.0.0/8, 192.168.1.10, fd00::/8");
+        assertTrue(proxies.contains("10.20.30.40"));
+        assertTrue(proxies.contains("192.168.1.10"));
+        assertTrue(proxies.contains("fd12::1"));
+        assertFalse(proxies.contains("192.168.1.11"));
+        assertFalse(proxies.contains("172.17.0.1"));
+        assertFalse(proxies.contains("no-es-ip"));
+    }
+
+    @Test
+    void withoutTrustedProxiesNothingIsTrusted() {
+        TrustedProxies proxies = TrustedProxies.parse("");
+        assertTrue(proxies.isEmpty());
+        assertFalse(proxies.contains("127.0.0.1"));
+        assertThrows(IllegalStateException.class, () -> TrustedProxies.parse("proxy.local"));
+        assertThrows(IllegalStateException.class, () -> TrustedProxies.parse("10.0.0.0/40"));
     }
 
     @Test

@@ -13,14 +13,15 @@ public final class Messages {
     // para no revelar qué correos tienen cuenta.
     public static final String REGISTER_ACKNOWLEDGED = "Si los datos son válidos, te enviamos un correo para confirmar la cuenta.";
     public static final String USER_NAME_TAKEN = "El nombre de usuario no está disponible";
-    public static final String EMAIL_NOT_CONFIRMED = "Debes confirmar tu correo antes de iniciar sesión. Revisa tu bandeja de entrada.";
+    public static final String EMAIL_NOT_CONFIRMED = "Debes confirmar tu correo antes de iniciar sesión. Revisa tu bandeja de entrada o pide un enlace nuevo.";
     public static final String ACCOUNT_LOCKED = "Demasiados intentos fallidos. Intenta de nuevo en unos minutos.";
     public static final String EMAIL_CONFIRMED = "Tu correo fue confirmado. Ya puedes iniciar sesión.";
-    public static final String EMAIL_CONFIRMATION_INVALID = "El enlace de confirmación no es válido o expiró.";
+    public static final String EMAIL_CONFIRMATION_INVALID = "El enlace de confirmación no es válido o expiró. Puedes pedir uno nuevo.";
+    public static final String CONFIRMATION_RESENT = "Si el correo corresponde a una cuenta pendiente de confirmar, te enviamos un enlace nuevo.";
     public static final String PASSWORD_RESET_SENT = "Si el correo corresponde a una cuenta, te enviamos un enlace para restablecer la contraseña.";
     public static final String PASSWORD_RESET_OK = "Tu contraseña se restableció. Ya puedes iniciar sesión.";
     public static final String PASSWORD_RESET_INVALID = "El enlace para restablecer la contraseña no es válido o expiró.";
-    public static final String TOO_MANY_REQUESTS = "Demasiados intentos. Espera un minuto y vuelve a intentarlo.";
+    public static final String TOO_MANY_REQUESTS = "Demasiados intentos. Espera un momento y vuelve a intentarlo.";
 
     public static final String SAME_EMAIL = "Ese ya es tu correo actual.";
     public static final String EMAIL_CHANGE_REQUESTED = "Te enviamos un enlace al correo nuevo. El cambio se aplicará cuando lo abras; mientras tanto sigues usando tu correo actual.";

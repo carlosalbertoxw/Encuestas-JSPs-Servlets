@@ -10,8 +10,7 @@
             <c:when test="${not empty token}">
                 <div class="card">
                     <div class="card-body">
-                        <form action="${pageContext.request.contextPath}/User" method="post">
-                            <input type="hidden" name="form" value="reset-password">
+                        <form action="${pageContext.request.contextPath}/User/ResetPassword" method="post">
                             <input type="hidden" name="_csrf" value="${sessionScope.csrf_token}">
                             <input type="hidden" name="token" value="<c:out value='${token}'/>">
                             <div class="mb-3">
@@ -32,7 +31,7 @@
             </c:when>
             <c:otherwise>
                 <p class="text-center">
-                    <a href="${pageContext.request.contextPath}/User?page=forgot-password">Solicitar un nuevo enlace</a>
+                    <a href="${pageContext.request.contextPath}/User/ForgotPassword">Solicitar un nuevo enlace</a>
                 </p>
             </c:otherwise>
         </c:choose>

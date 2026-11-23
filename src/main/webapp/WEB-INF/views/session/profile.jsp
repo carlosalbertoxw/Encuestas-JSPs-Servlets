@@ -16,12 +16,12 @@
             </div>
             <div class="card-footer">
                 <a class="btn btn-sm btn-outline-primary"
-                   href="${pageContext.request.contextPath}/Answer?page=add&id=${item.id}">Responder</a>
+                   href="${pageContext.request.contextPath}/Answer/Add/${item.id}">Responder</a>
             </div>
         </div>
     </c:forEach>
     <jsp:include page="/WEB-INF/views/template/pager.jsp">
-        <jsp:param name="baseUrl" value="${pageContext.request.contextPath}/User?profile=${profileUserName}"/>
+        <jsp:param name="baseUrl" value="${pageContext.request.contextPath}/User/Index?profile=${profileUserName}"/>
     </jsp:include>
 </div>
 <%@ include file="/WEB-INF/views/template/scripts.jsp" %>

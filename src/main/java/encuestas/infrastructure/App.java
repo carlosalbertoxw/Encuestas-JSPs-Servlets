@@ -2,9 +2,13 @@ package encuestas.infrastructure;
 
 import encuestas.data.AnswerRepository;
 import encuestas.data.Database;
+import encuestas.data.DbAttemptCounterStore;
+import encuestas.data.EmailOutbox;
 import encuestas.data.PollRepository;
 import encuestas.data.UserRepository;
 import encuestas.service.AccountLockout;
+import encuestas.service.AccountService;
+import encuestas.service.AttemptCounterStore;
 import encuestas.service.AuthService;
 import encuestas.service.EmailSender;
 import encuestas.service.PasswordService;
@@ -18,13 +22,11 @@ import java.time.Duration;
 import java.util.List;
 
 /**
- * Contenedor de los servicios compartidos de la aplicación (composición manual, sin
- * framework de inyección). Lo construye {@link AppInitializer} al arrancar y lo consumen
- * los servlets y filtros.
+ * Servicios compartidos de la aplicación, construidos una sola vez al arrancar (composición
+ * manual, sin framework de inyección). {@link AppInitializer} los pasa por constructor a los
+ * servlets y filtros, así que en las pruebas se pueden construir con otra configuración.
  */
 public final class App {
-
-    private static volatile App instance;
 
     private final AppConfig config;
     private final Database database;
@@ -32,14 +34,14 @@ public final class App {
     private final PollRepository polls;
     private final AnswerRepository answers;
     private final PasswordService passwords;
-    private final TokenService tokens;
-    private final AccountLockout lockout;
-    private final RateLimiter authRateLimiter;
     private final SecurityStampCache stampCache;
     private final AuthService auth;
-    private final EmailSender email;
+    private final AccountService accounts;
+    private final RateLimiter authRateLimiter;
+    private final RateLimiter emailChangeRateLimiter;
+    private final BackgroundJobs backgroundJobs;
 
-    private App(AppConfig config) {
+    public App(AppConfig config) {
         this.config = config;
         this.database = new Database(config.getDbHost(), config.getDbPort(), config.getDbName(),
                 config.getDbUser(), config.getDbPassword());
@@ -47,50 +49,40 @@ public final class App {
         this.polls = new PollRepository(database.getDataSource());
         this.answers = new AnswerRepository(database.getDataSource());
         this.passwords = new PasswordService();
-        // Con APP_TOKEN_SECRET definido se usa ese secreto fijo; si no, un almacén de
-        // claves persistidas con rotación (TokenKeyStore).
+        this.stampCache = new SecurityStampCache();
+
+        // Con APP_TOKEN_SECRET definido se usa ese secreto fijo; si no, un almacén de claves
+        // persistidas con rotación (TokenKeyStore).
         byte[] explicitSecret = config.getTokenSecret();
-        this.tokens = new TokenService(explicitSecret != null
+        TokenService tokens = new TokenService(explicitSecret != null
                 ? List.of(explicitSecret)
                 : TokenKeyStore.loadOrCreate(Path.of(config.getKeysDir()).resolve("token-keys.txt")));
-        this.lockout = new AccountLockout();
-        this.authRateLimiter = new RateLimiter(10, Duration.ofMinutes(1));
-        this.stampCache = new SecurityStampCache();
-        this.auth = new AuthService(users, passwords, lockout);
-        this.email = createEmailSender(config);
-    }
 
-    /**
-     * Los correos siempre salen por SMTP (en Development, a Mailpit por defecto); nunca se
-     * escriben en el log, porque llevan enlaces con tokens.
-     */
-    private static EmailSender createEmailSender(AppConfig config) {
+        AttemptCounterStore counters = new DbAttemptCounterStore(database.getDataSource());
+        this.auth = new AuthService(users, passwords, new AccountLockout(counters));
+        this.authRateLimiter = new RateLimiter(counters, "auth", config.getAuthRateLimit(), Duration.ofMinutes(1));
+        this.emailChangeRateLimiter = new RateLimiter(counters, "email-change",
+                config.getEmailChangeRateLimit(), Duration.ofHours(1));
+
+        // Los correos siempre salen por SMTP (en Development, a Mailpit por defecto) a través de
+        // la bandeja de salida; nunca se escriben en el log, porque llevan enlaces con tokens.
         if (config.getSmtp() == null) {
             throw new IllegalStateException("Falta SMTP_HOST para enviar los correos");
         }
-        return new SmtpEmailSender(config.getSmtp());
+        EmailSender sender = new SmtpEmailSender(config.getSmtp());
+        EmailOutbox outbox = new EmailOutbox(database.getDataSource());
+        this.accounts = new AccountService(users, passwords, tokens, outbox, stampCache, config.getBaseUrl());
+        this.backgroundJobs = new BackgroundJobs(outbox, sender, database.getDataSource());
     }
 
-    static App start(AppConfig config) {
-        App app = new App(config);
-        instance = app;
-        return app;
+    /** Arranca las tareas en segundo plano (envío de correos y limpieza). */
+    public void startBackgroundJobs() {
+        backgroundJobs.start();
     }
 
-    static void stop() {
-        App app = instance;
-        instance = null;
-        if (app != null) {
-            app.database.close();
-        }
-    }
-
-    public static App get() {
-        App app = instance;
-        if (app == null) {
-            throw new IllegalStateException("La aplicación no está inicializada");
-        }
-        return app;
+    public void close() {
+        backgroundJobs.stop();
+        database.close();
     }
 
     public AppConfig getConfig() {
@@ -117,14 +109,6 @@ public final class App {
         return passwords;
     }
 
-    public TokenService getTokens() {
-        return tokens;
-    }
-
-    public RateLimiter getAuthRateLimiter() {
-        return authRateLimiter;
-    }
-
     public SecurityStampCache getStampCache() {
         return stampCache;
     }
@@ -133,7 +117,15 @@ public final class App {
         return auth;
     }
 
-    public EmailSender getEmail() {
-        return email;
+    public AccountService getAccounts() {
+        return accounts;
+    }
+
+    public RateLimiter getAuthRateLimiter() {
+        return authRateLimiter;
+    }
+
+    public RateLimiter getEmailChangeRateLimiter() {
+        return emailChangeRateLimiter;
     }
 }

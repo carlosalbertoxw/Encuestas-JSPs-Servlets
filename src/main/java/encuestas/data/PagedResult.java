@@ -30,10 +30,6 @@ public class PagedResult<T> {
         return page;
     }
 
-    public int getPageSize() {
-        return pageSize;
-    }
-
     public long getTotalCount() {
         return totalCount;
     }
